@@ -17,27 +17,27 @@
 %   xvasil03-Event-notifications-OpenIO-Swift-Minio-30-prilohy-appendices.tex - přílohy / appendices
 %   xvasil03-Event-notifications-OpenIO-Swift-Minio-30-prilohy-appendices-en.tex - přílohy v angličtině / appendices in English
 %==============================================================================
-\documentclass[]{fitthesis} % bez zadání - pro začátek práce, aby nebyl problém s překladem
+%\documentclass[]{fitthesis} % bez zadání - pro začátek práce, aby nebyl problém s překladem
 %\documentclass[english]{fitthesis} % without assignment - for the work start to avoid compilation problem
 %\documentclass[zadani]{fitthesis} % odevzdani do wisu a/nebo tisk s barevnými odkazy - odkazy jsou barevné
-%\documentclass[english,zadani]{fitthesis} % for submission to the IS FIT and/or print with color links - links are color
+\documentclass[english,zadani]{fitthesis} % for submission to the IS FIT and/or print with color links - links are color
 %\documentclass[zadani,print]{fitthesis} % pro černobílý tisk - odkazy jsou černé
 %\documentclass[english,zadani,print]{fitthesis} % for the black and white print - links are black
 %\documentclass[zadani,cprint]{fitthesis} % pro barevný tisk - odkazy jsou černé, znak VUT barevný
 %\documentclass[english,zadani,cprint]{fitthesis} % for the print - links are black, logo is color
-% * Je-li práce psaná v anglickém jazyce, je zapotřebí u třídy použít 
+% * Je-li práce psaná v anglickém jazyce, je zapotřebí u třídy použít
 %   parametr english následovně:
-%   If thesis is written in English, it is necessary to use 
+%   If thesis is written in English, it is necessary to use
 %   parameter english as follows:
 %      \documentclass[english]{fitthesis}
-% * Je-li práce psaná ve slovenském jazyce, je zapotřebí u třídy použít 
+% * Je-li práce psaná ve slovenském jazyce, je zapotřebí u třídy použít
 %   parametr slovak následovně:
-%   If the work is written in the Slovak language, it is necessary 
+%   If the work is written in the Slovak language, it is necessary
 %   to use parameter slovak as follows:
 %      \documentclass[slovak]{fitthesis}
-% * Je-li práce psaná v anglickém jazyce se slovenským abstraktem apod., 
+% * Je-li práce psaná v anglickém jazyce se slovenským abstraktem apod.,
 %   je zapotřebí u třídy použít parametry english a enslovak následovně:
-%   If the work is written in English with the Slovak abstract, etc., 
+%   If the work is written in English with the Slovak abstract, etc.,
 %   it is necessary to use parameters english and enslovak as follows:
 %      \documentclass[english,enslovak]{fitthesis}
 
@@ -77,7 +77,7 @@
 % problém je, že balíček hyperref musí být uveden jako poslední, takže nemůže
 % být v šabloně
 % "hyperref" package create clickable links in pdf if you are using pdflatex.
-% Problem is that this package have to be introduced as the last one so it 
+% Problem is that this package have to be introduced as the last one so it
 % can not be placed in the template file.
 \ifWis
 \ifx\pdfoutput\undefined % nejedeme pod pdflatexem / we are not using pdflatex
@@ -117,30 +117,30 @@
 %---------------------------------------------------------------------------
 \projectinfo{
   %Prace / Thesis
-  project={BP},            %typ práce BP/SP/DP/DR  / thesis type (SP = term project)
+  project={DP},            %typ práce BP/SP/DP/DR  / thesis type (SP = term project)
   year={2021},             % rok odevzdání / year of submission
   date=\today,             % datum odevzdání / submission date
   %Nazev prace / thesis title
-  title.cs={Název práce},  % název práce v češtině či slovenštině (dle zadání) / thesis title in czech language (according to assignment)
-  title.en={Thesis title}, % název práce v angličtině / thesis title in english
+  title.cs={Sledování objektového úložiště OpenStack Swift pomocí Beanstalk událostí},  % název práce v češtině či slovenštině (dle zadání) / thesis title in czech language (according to assignment)
+  title.en={Monitoring the OpenStack Swift Object Store Using Beanstalk Events}, % název práce v angličtině / thesis title in english
   %title.length={14.5cm}, % nastavení délky bloku s titulkem pro úpravu zalomení řádku (lze definovat zde nebo níže) / setting the length of a block with a thesis title for adjusting a line break (can be defined here or below)
   %sectitle.length={14.5cm}, % nastavení délky bloku s druhým titulkem pro úpravu zalomení řádku (lze definovat zde nebo níže) / setting the length of a block with a second thesis title for adjusting a line break (can be defined here or below)
   %dectitle.length={14.5cm}, % nastavení délky bloku s titulkem nad prohlášením pro úpravu zalomení řádku (lze definovat zde nebo níže) / setting the length of a block with a thesis title above declaration for adjusting a line break (can be defined here or below)
   %Autor / Author
-  author.name={Jméno},   % jméno autora / author name
-  author.surname={Příjmení},   % příjmení autora / author surname 
-  %author.title.p={Bc.}, % titul před jménem (nepovinné) / title before the name (optional)
+  author.name={Nemanja},   % jméno autora / author name
+  author.surname={Vasiljević},   % příjmení autora / author surname
+  author.title.p={Bc.}, % titul před jménem (nepovinné) / title before the name (optional)
   %author.title.a={Ph.D.}, % titul za jménem (nepovinné) / title after the name (optional)
   %Ustav / Department
-  department={UPGM}, % doplňte příslušnou zkratku dle ústavu na zadání: UPSY/UIFS/UITS/UPGM / fill in appropriate abbreviation of the department according to assignment: UPSY/UIFS/UITS/UPGM
+  department={UIFS}, % doplňte příslušnou zkratku dle ústavu na zadání: UPSY/UIFS/UITS/UPGM / fill in appropriate abbreviation of the department according to assignment: UPSY/UIFS/UITS/UPGM
   % Školitel / supervisor
-  supervisor.name={Jméno},   % jméno školitele / supervisor name 
-  supervisor.surname={Příjmení},   % příjmení školitele / supervisor surname
-  supervisor.title.p={prof. RNDr.},   %titul před jménem (nepovinné) / title before the name (optional)
+  supervisor.name={Marek},   % jméno školitele / supervisor name
+  supervisor.surname={Rychlý},   % příjmení školitele / supervisor surname
+  supervisor.title.p={RNDr.},   %titul před jménem (nepovinné) / title before the name (optional)
   supervisor.title.a={Ph.D.},    %titul za jménem (nepovinné) / title after the name (optional)
   % Klíčová slova / keywords
-  keywords.cs={Sem budou zapsána jednotlivá klíčová slova v českém (slovenském) jazyce, oddělená čárkami.}, % klíčová slova v českém či slovenském jazyce / keywords in czech or slovak language
-  keywords.en={Sem budou zapsána jednotlivá klíčová slova v anglickém jazyce, oddělená čárkami.}, % klíčová slova v anglickém jazyce / keywords in english
+  keywords.cs={OpenIO Softwarově definované úložiště, Openstack Swift, MinIO, Beanstalk fronta, Monitorování událostí, Oznámení o událostech, Amazon S3 oznámení o události, Objektové úložiště}, % klíčová slova v českém či slovenském jazyce / keywords in czech or slovak language
+  keywords.en={OpenIO Software Defined Storage, Openstack Swift, MinIO, Beanstalk queue, Event monitoring, Event notification, Amazon S3 event notification, Object storage}, % klíčová slova v anglickém jazyce / keywords in english
   %keywords.en={Here, individual keywords separated by commas will be written in English.},
   % Abstrakt / Abstract
   abstract.cs={Do tohoto odstavce bude zapsán výtah (abstrakt) práce v českém (slovenském) jazyce.}, % abstrakt v českém či slovenském jazyce / abstract in czech or slovak language
@@ -201,7 +201,7 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
   \setlength{\parskip}{0pt}
 
   {\hypersetup{hidelinks}\tableofcontents}
-  
+
   % Seznam obrazku a tabulek (pokud prace obsahuje velke mnozstvi obrazku, tak se to hodi)
   % List of figures and list of tables (if the thesis contains a lot of pictures, it is good)
   \ifczech
@@ -211,7 +211,7 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
     \renewcommand\listfigurename{Zoznam obrázkov}
   \fi
   % {\hypersetup{hidelinks}\listoffigures}
-  
+
   \ifczech
     \renewcommand\listtablename{Seznam tabulek}
   \fi
@@ -239,7 +239,7 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
   \else
     \input{xvasil03-Event-notifications-OpenIO-Swift-Minio-01-kapitoly-chapters}
   \fi
-  
+
   % Kompilace po částech (viz výše, nutno odkomentovat)
   % Compilation piecewise (see above, it is necessary to uncomment it)
   %\subfile{projekt-01-uvod-introduction}
@@ -260,7 +260,7 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
     \def\@openbib@code{\addcontentsline{toc}{chapter}{Literatura}}
     \makeatother
     \bibliographystyle{bib-styles/Pysny/czplain}
-  \else 
+  \else
     \makeatletter
     \def\@openbib@code{\addcontentsline{toc}{chapter}{Bibliography}}
     \makeatother
@@ -298,7 +298,7 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
 %\iftwoside
 %  \cleardoublepage
 %\fi
-  
+
 \ifslovak
 %  \section*{Zoznam príloh}
 %  \addcontentsline{toc}{section}{Zoznam príloh}
@@ -312,30 +312,30 @@ Uvedl jsem všechny literární prameny, publikace a další zdroje, ze kterých
   \fi
 \fi
   \startcontents[chapters]
-  \setlength{\parskip}{0pt} 
+  \setlength{\parskip}{0pt}
   % seznam příloh / list of appendices
   % \printcontents[chapters]{l}{0}{\setcounter{tocdepth}{2}}
-  
+
   \ifODSAZ
     \setlength{\parskip}{0.5\bigskipamount}
   \else
     \setlength{\parskip}{0pt}
   \fi
-  
+
   % vynechani stranky v oboustrannem rezimu
   \iftwoside
     \cleardoublepage
   \fi
-  
+
   % Přílohy / Appendices
   \ifenglish
     \input{xvasil03-Event-notifications-OpenIO-Swift-Minio-30-prilohy-appendices-en}
   \else
     \input{xvasil03-Event-notifications-OpenIO-Swift-Minio-30-prilohy-appendices}
   \fi
-  
+
   % Kompilace po částech (viz výše, nutno odkomentovat)
   % Compilation piecewise (see above, it is necessary to uncomment it)
   %\subfile{xvasil03-Event-notifications-OpenIO-Swift-Minio-30-prilohy-appendices}
-  
+
 \end{document}
