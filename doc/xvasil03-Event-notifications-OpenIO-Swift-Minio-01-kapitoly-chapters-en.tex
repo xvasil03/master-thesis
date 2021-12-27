@@ -2,9 +2,38 @@
 %=========================================================================
 % Authors: Michal Bidlo, Bohuslav Křena, Jaroslav Dytrych, Petr Veigend and Adam Herout 2019
 
+\hyphenation{OpenStack Swift OpenIO SDS}
+
 \chapter{Introduction}
 
-\textcolor{gray}{\Blindtext}
+% general introduction for a topic:
+%- cloud computing popularity
+%- most popular service: cloud storage and its types
+%- about object storage
+%- users interest of what's going in theirs storage / event activities
+%- TODO: maybe remove talk about types of cloud storages? solution: talk about need for monitoring and users need to monitor/receive information regarding their storage
+In the current world, cloud computing became the most popular way of delivering different types of services throught Internet. One of the most popular cloud service is cloud storage, which allows users to store data in remote locations mentained by third party. Based on how cloud storage manages data, cloud storage can be divided into 3 types: Block storage, File storage and Object storage. Object storage manages data as objects, each object typically includes data itself and some additional informations stored in objects metadata. Since data are stored in remote locations, to which users don't have direct and complete access, some users or external services might want to receive informations about certain events (for example change of content) in storages where their data are located.
+
+% importance of thesis in this field
+%- react to events - possibly react to 'bad' events
+%- allows users to have better picture what is going on in their storage
+Importance of this thesis is to provide event informations to users in OpenIO SDS and OpenStack Swift, which will allow user to react on those events and possibly prevent/detect unwanted actions. Providing event notifications will allow users to have better picture on what is going on in their storage and impove monitoring in these object storages.
+
+%past advances in this field
+There was two attempts\cite{swiftPatch1}\cite{swiftPatch2} to solve this issue within OpenStack Swift which were not officially accepted and their solution is outdated. Currently there is no official solution for publishing event notification in OpenStack Swift nor OpenIO Software-Defined Storage (hereinafter SDS).
+
+%why am I interested in this, why I choose this topic
+%- perosnally i used object storage
+%- can se myself using this solution in future as well as millions of other users
+%- impact on big amount of users
+%- contibuting to open source projects
+My interest in this topic steems from its possible impact to extensive amount of users that OpenStack Swift and OpenIO have. Contibuting to open source projects is something that I always wanted to be part of. Possiblity to improve user experience in OpenStack Swift and OpenIO SDS and allow those storages to be even more competative against comercial storages (Amazon, Google, ...) is another reason why I choose this topic.
+
+%goals of thesis
+The goal of this thesis is to create program/middleware which wil publish event notification to user specified destination. One of supported destination will be Beanstalk queue, but program will allow to easily add other types of destinations (for example Kafka) using predefined interface. Proposed program will allow user to specify, using objects metadata (such as name prefix/sufix and object size) and type of event, which event notification should be published. Program will be able to run within OpenStack Swift as well as OpenIO SDS. This thesis will strive to find such solution that could be officially accpeted as part of OpenStack Swift and OpenIO SDS.
+
+%structure of thesis
+Structure of thesis - TODO - there will be probably change in chpaters structure
 
 \chapter{Background}
 
@@ -49,7 +78,7 @@
         \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
         \caption{TODO figure}
     \end{figure}
-\section{Openstack Swift}
+\section{OpenStack Swift}
     \textcolor{gray}{\Blindtext}
     \begin{figure}[hbt]
         \centering
@@ -68,7 +97,7 @@
     \textcolor{gray}{\Blindtext}
 \section{Current state}
     \textcolor{gray}{\Blindtext}
-\section{Middleware for Openstack Swift and OpenIO SDS}
+\section{Middleware for OpenStack Swift and OpenIO SDS}
     \textcolor{gray}{\Blindtext}
     \begin{figure}[hbt]
         \centering
