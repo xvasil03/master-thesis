@@ -37,8 +37,61 @@ Structure of thesis - TODO - there will be probably change in chpaters structure
 
 \chapter{Background}
 
+This chapter introduces Object storage and its core concepts along with the underlying technologies. For sufficient understanding its important to explain how Software-defined storage manages data and what types of events can occur inside. The last part of this chapter describes concept of event notifications, why are they important and current interfaces for publishing event notifications to users.
+
 \section{Object storage}
-    \textcolor{gray}{\Blindtext}
+    %introduction/concept
+    Object storage, also known as \textit{object-based storage} (OBS), is type of storage that handles data as objects, instead of hierarchical methods used in file systems\cite{objectBasedStorage}. Object stores are designed at handling data as whole objects, making them ideal solution for any unchanging data. Data in object stores are changed by replacing objects or files and therefore object stores are prefered mechanicsm for storing such files\cite{networkStorage}.
+
+    %key koncepts
+    \subsection{Key concepts}
+    Key concepts of object storage are\cite{ibmObjectStorage}:
+    \begin{itemize}
+        \item{Objects - An object typically consist of user data and metadata uploaded to objected storage.}
+        \item{Containers/Buckets - represents logical abstraction that is used to provide a data container in object storage. An object with same name in two different containers represents two different objects. This concept is used to segragate data using bucket ownership and a combination of public and secret keys bound to object store accounts which allows users and application to manipulate with data that are authorized for specific type of manipulation (read/write/update).}
+        \item{Metadata - Additional information about data, create and last modified date, size, hash,...}
+        \item{Access Control Lists(ACLs) - used as primary security construct in object storage, stored in account or bucket level and allows owners to grant permissions for certaint operations based on UUID, email, ...}
+        \item{Object Data protection - two main schemes of data protections in object storage are \textbf{Replication} and \textbf{Erasure Coding}.
+
+        Replication is method to ensure data resilience. Data are copied into multiple locations/disks/partitions, in case of failure, data are used from secondary copy, either to recreate original copy or as main copy.
+
+        Erasure coding is process throught the data is separated into fragments. Then fragments are expanded and encoded with redundant pieces and stored across different storage devices. Erasure coding adds redundancy and allows object storage to tolerate failures.}
+    \end{itemize}
+
+
+    \subsection{Object data}
+    %types of stored informations
+    With object storage techniques, each object contains\cite{ibmObjectStorage}:
+    \begin{itemize}
+      \item{Data - user specified data that needs to be stored in persistent storage. It can be binary data, text file, image, etc..}
+      \item{Metadata - Extra data describing objects data and can be divided into two types: Device-managed metadata is additional information maintained by storage device and used as part of object management in physical storage.\cite{objectBasedStorage}. Second type is Custom metadata, where user can store any additional information in key and value pairs. In object storage metadata are stored together with the object.}
+      \item{A universally unique identifier (UUID) - This ID, created using hashing process based on object name and some other additional informations, is assigned to each object in a Object storage. Using ID object storage systems are cappable of tell a part objects from one another and ID is used to extract data in system without knowing their physical location/drive and offset.}
+    \end{itemize}
+
+    \subsection{Access to object storage}
+    %access to object storage
+    %-resfull interface
+    %-advantages of this approach
+    %-popular intefaces
+    Obeject storage services provide RESTful interface \cite{cloudObjectStorage} over HTTP protocol for objects store and access. This approach allows users to create, read, delete, update or even query objects anytime and anywhere simply by referencing UUID (or using certain attributes for querying), usually with proper authentication process. Most popular interfaces for comunicating with object storages are Amazon S3 (Simple Storage Service) API and OpenStack Swift API.
+
+    %comparison to other storage models
+    \subsection{Pros and cons of object storage}
+    Pros:
+    \begin{itemize}
+        \item{Cappable of handling large amount of unstructured data}
+        \item{Reduced TCO and cheap COTS - Object storage is designed to utilize cheap COTS(Commercial off-the-shelf) components, as result Total Cost of Ownership(TCO) is lower then owning home-made Network-Attached Storages(NAS)\cite{networkStorage}.}
+        \item{Unlimited scalability - Since object storages are build on distributed systems, they scale very well compared to traditional storages where they often have upper limit.\cite{openstackObjectStorage}}
+        \item{Wide-open metadata - allowing user to store custom metadata and posibility of createing metadata-driven policies such as compression and tiering.}
+    \end{itemize}
+    Cons:
+    \begin{itemize}
+        \item{No in-place update - object must be manipulated as whole unit}
+        \item{No locking mechanicsm - object storage does not manage object-level locking and it is up to applications to solve concurrent PUT/GET.}
+        \item{Slower - this makes object storages poor choice for applications that need rapid and frequent acess to data.}
+    \end{itemize}
+
+
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
