@@ -44,6 +44,7 @@ This chapter introduces Object storage and its core concepts along with the unde
     Object storage, also known as \textit{object-based storage} (OBS), is type of storage that handles data as objects, instead of hierarchical methods used in file systems\cite{objectBasedStorage}. Object stores are designed at handling data as whole objects, making them ideal solution for any unchanging data. Data in object stores are changed by replacing objects or files and therefore object stores are prefered mechanicsm for storing such files\cite{networkStorage}.
 
     %key koncepts
+    %-metadata are stored in same object store device but on separated location
     \subsection{Key concepts}
     Key concepts of object storage are\cite{ibmObjectStorage}:
     \begin{itemize}
@@ -82,7 +83,7 @@ This chapter introduces Object storage and its core concepts along with the unde
         \item{Cappable of handling large amount of unstructured data}
         \item{Reduced TCO and cheap COTS - Object storage is designed to utilize cheap COTS(Commercial off-the-shelf) components, as result Total Cost of Ownership(TCO) is lower then owning home-made Network-Attached Storages(NAS)\cite{networkStorage}.}
         \item{Unlimited scalability - Since object storages are build on distributed systems, they scale very well compared to traditional storages where they often have upper limit.\cite{openstackObjectStorage}}
-        \item{Wide-open metadata - allowing user to store custom metadata and posibility of createing metadata-driven policies such as compression and tiering.}
+        \item{Wide-open metadata - allows users to store custom metadata and posibility of createing metadata-driven policies, such as compression and tiering.}
     \end{itemize}
     Cons:
     \begin{itemize}
@@ -91,19 +92,91 @@ This chapter introduces Object storage and its core concepts along with the unde
         \item{Slower - this makes object storages poor choice for applications that need rapid and frequent acess to data.}
     \end{itemize}
 
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
+        \caption{TODO figure}
+    \end{figure}
 
+\section{Software-Defined storage}
+    %introduction to topic
+    Software-Defined storage(SDS) is storage architecture which separates software storage from hardware allowing greater scalability, flexibility and control over data storage infrastructure.
+    With growth of Software-Defined Networks(SDN) and need of Software-Defined Infrastructure(SDI), which aims to virtualize network resources and separate control plane from data plane, this principle was needed to be apply on Object storages as well\cite{sdsSDSMultiTenantEnv}.
+
+    To overcome limitations of traditional storage infrastructures, the Software-Defined Storage (SDS) is imposed as proper solution to simplify data and configuration management, while improving end-to-end control functionality of conventional storage systems\cite{sdsSurvey}. While traditional storages like  storage area networks (SAN) and network-attached storage (NAS) provides scalability and reliability, SDS provides it with much lower cost by utilizing industry-standard or x86 system and therefore removing dependency on expensive hardware\cite{sdsWPRedHatSDS}.
+
+    %principles
+    % - Scale-out
+    % - Customizable
+    % - Automation
+    % - Masking
+    % - Policy Management
+    \subsection{Principles}
+    There is no clear definition on criteria for defining software-defined storage, although several key principles can be deducted\cite{sdsGPCloudStorage}:
+    \begin{itemize}
+        \item Scale-out - SDS should enable low-cost horizontal scaling (by adding new commodity hardware to existing infrastructure) compared to vertical scaling with more powerfull (and expensive) hardware.
+        \item Customizable - SDS should offer system storage customization to meet specific storage QoS requirements. This will allow users to choose storage solution based on their requirements/performance and avoid unnecessary overpaying.
+        \item Automation - once QoS is defined process of deployment and monitoring on object storage should be automated and done without need to human resources.
+        \item Masking - SDS can mask underlying storage system and distributed system as lons as they provide common storage API and meet required QoS. For SDS can offer block or File API even though data are saved in object storage (like Ceph does).
+        \item Police Management - SDS Software must manage storage according to specified policies and QoS requirements despite being in multi-tenant space. SDS must be cappable to handle failures and autoscale in case of change in workloads.
+    \end{itemize}
+
+
+    %architecture
+    %   - data plane
+    %   - control plane
+    %functions
+    %benefits
+    \subsection{Architecture}
+    As previously described, the main characteristic of SDS is to separate storage functions into control plane and data plane.
+
+    \paragraph{Control plane}
+    - the control plane represents an abstraction layer with main goal to virtualize storage resources. It offers high-level functions that are needed by the customer to run the business workload and enable optimized, flexible, scalable, and rapid provisioning storage infrastructure capacity. These capabilities span functions like policy automation, analytics and optimization, backup and copy management, security, and integration with the API services, including other cloud provider services\cite{sdsIBMSDSGuide}.
+
+    \paragraph{Data plane}
+    - the data plane encompasses the infrastructure where data is processed. It consists of all basic storage management functions, such as virtualization, RAID protection, tiering, copy services (remote, local, synchronous, asynchronous, and point-in-time), encryption, compression, and data deduplication that can be requested by the control plane. The data plane is the interface to the hardware infrastructure where the data is stored. It provides a complete range of data access possibilities and spans traditional access methods, such as block I/O (for example, iSCSI), File I/O (NFS, SMB, or Hadoop Distributed File System (HFDS)), and object-storage\cite{sdsIBMSDSGuide}.
+
+    %todo image of layers from sdsSurvey
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
         \caption{TODO figure}
     \end{figure}
-\section{Software-defined storage}
-    \textcolor{gray}{\Blindtext}
-    \begin{figure}[hbt]
-        \centering
-        \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
-        \caption{TODO figure}
-    \end{figure}
+
+\section{Beanstalk queue}
+
+    Beanstalk queue or shorter beanstalkd is fast, simple and lighweight working queue\cite{}. Main use case is to manage workflow between different parts of workers of application throught working queues and messages. Beanstalkd was developed for need of Facebook application in order to reduce average response time\cite{beanstalkdOfficial}. Provided by simple protocol design, heavily inspired by memcached, implemented in programming language C, Beanstalkd offers lean architecture which allows it to be installed and used very simply, making it perfect for many use cases\cite{beanstalkdInstall}.
+
+
+    \subsection{Beanstalkd elements}
+    Beanstalkd is priority queue with server-client architecture. Server represents queues where jobs are saved based on priority. Beanstalkd architecture is composed from several components:
+    \begin{itemize}
+        \item Jobs - tasks stored by client
+        \item Tubes - used for storing tasks, each tube contains a ready queue and a delay queue.
+        \item Clients - create and send jobs to beanstalkd using command "put"
+        \item Worker - process "listening" on assigned tube, reserves and consumes jobs from tube
+    \end{itemize}
+
+    \subsection{Job Lifecycle}
+    Each job is uniquely assigned to one worker. A job in beanstalkd is created by client using "put" command. While being in tube, job can be in next states\cite{beanstalkdProtocol}:
+    \begin{itemize}
+        \item ready - after "put" command by client, job usually starts with ready state. This state represents that job is free and ready to be taken by worker.
+        \item reserved - represents that job is currently being processed by a worker. Is it important to note that untill a worker succesfully finishes a job, the job remains in tube. Only after job is done by worker, given job is released from queue.
+        \item delayed - job is either created by producer with "put" with delay or worker released a job with delay. This mean that job is in delay queue untill delay time(in seconds) expires.
+        \item buried - worker decided to not complete a job. There can be various reason for it, such as error occured or not enough capacity/power to complete a job. Buried job can be futher inspected in debug process or sent back to ready queue.
+    \end{itemize}
+
+    %todo picture or job Lifecycle
+
+    \subsection{Key characteristics}
+    Key beanstalkd characteristics are:
+    \begin{itemize}
+        \item Asynchronous - beanstalkd allows producers to put jobs in queue and workers can process them later.
+        \item Distributed - in a same way as memchaced, beanstalkd can be distributed although this distribution is handled by clients. The beanstalkd server doesn't know anything about other beanstalkd instances that are running.
+        \item Persistent - beanstalkd offeres support for persistent jobs durring which all jobs are written to binlog. In case of power outrage, after restarting beanstalkd instance will recover jobs content from the logs.
+        \item Not secured - beanstalkd is designed to be runned in private/secured network. Therefore it does not support authentication nor authorization.
+        \item Scalability - beanstalkd can be scaled horizontally, although it must be done on client side, where each client would connect to multiple servers and then use specific algorithms(e.g. Round-robin) to switch between the different servers.
+    \end{itemize}
 
 \section{Event notifications}
     \textcolor{gray}{\Blindtext}
