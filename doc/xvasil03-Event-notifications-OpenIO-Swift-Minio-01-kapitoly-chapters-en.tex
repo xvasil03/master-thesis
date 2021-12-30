@@ -153,18 +153,29 @@ This chapter introduces Object storage and its core concepts along with the unde
     \begin{itemize}
         \item Jobs - tasks stored by client
         \item Tubes - used for storing tasks, each tube contains a ready queue and a delay queue.
-        \item Clients - create and send jobs to beanstalkd using command "put"
-        \item Worker - process "listening" on assigned tube, reserves and consumes jobs from tube
+        \item Producer - create and send jobs to beanstalkd using command "put"
+        \item Consumer - process "listening" on assigned tube, reserves and consumes jobs from tube
     \end{itemize}
 
     \subsection{Job Lifecycle}
-    Each job is uniquely assigned to one worker. A job in beanstalkd is created by client using "put" command. While being in tube, job can be in next states\cite{beanstalkdProtocol}:
+    Each job is uniquely assigned to one worker at a time. A job in beanstalkd is created by client using "put" command. While being in tube, job can be in next states\cite{beanstalkdProtocol}:
     \begin{itemize}
-        \item ready - after "put" command by client, job usually starts with ready state. This state represents that job is free and ready to be taken by worker.
-        \item reserved - represents that job is currently being processed by a worker. Is it important to note that untill a worker succesfully finishes a job, the job remains in tube. Only after job is done by worker, given job is released from queue.
-        \item delayed - job is either created by producer with "put" with delay or worker released a job with delay. This mean that job is in delay queue untill delay time(in seconds) expires.
-        \item buried - worker decided to not complete a job. There can be various reason for it, such as error occured or not enough capacity/power to complete a job. Buried job can be futher inspected in debug process or sent back to ready queue.
+        \item READY - the task is free and can be executed immediately by consumer.
+        \item DELAYED - the task has assigned delay time that needs to expire before execution. After delay time expires, beanstalkd will automaticly change it state to READY.
+        \item RESERVED - the task is reserved and is being executed by consumer. Beanstalkd is responsible for checking whether the task is completed in time (TTR - Time to run).
+        \item BURIED - reserved task, the task will not be removed nor executed until client decides. This state is often used for futher inspection in debug process when failure or undefined behavior occurs during task execution.
+        \item DELETED - the task is deleted from tube, beanstalkd no longer maintains these jobs.
     \end{itemize}
+
+    Figure \ref{fig:beanstalkdJobSM} describes life cycle of job in beanstalkd tube. Job is created by Producer using put command. Beanstalkd allows Producer to add delay time before task will be ready for execution, which sets job state to DELAYED. After delay time expires, beanstalkd will automaticly change job state to READY. Producer can specify job priority and jobs with READY state are stored in priority queue. Job with biggest priority is reserved and executed by Consumer. After succesfully executing the task, Consumer will delete job from beanstalkd. If some error occured, Consumer can burry the task. Consumer can decide that is not interested in compliting reserved task. Using release command (with optional delay) job state will be changed back to READY (or DELAY).
+    Jobs with BURRIED state will not be touch by beanstalkd server until client "kicks" them to READY state.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=1\textwidth]{obrazky-figures/beanstalkd-job-states.eps}
+        \caption{State machine diagram of job in Beanstalkd tube}
+        \label{fig:beanstalkdJobSM}
+    \end{figure}
 
     %todo picture or job Lifecycle
 
