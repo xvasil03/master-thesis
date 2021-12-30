@@ -131,6 +131,12 @@ This chapter introduces Object storage and its core concepts along with the unde
     - the data plane encompasses the infrastructure where data is processed. It consists of all basic storage management functions, such as virtualization, RAID protection, tiering, copy services (remote, local, synchronous, asynchronous, and point-in-time), encryption, compression, and data deduplication that can be requested by the control plane. The data plane is the interface to the hardware infrastructure where the data is stored. It provides a complete range of data access possibilities and spans traditional access methods, such as block I/O (for example, iSCSI), File I/O (NFS, SMB, or Hadoop Distributed File System (HFDS)), and object-storage\cite{sdsIBMSDSGuide}.
 
     %todo image of layers from sdsSurvey
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=1\textwidth]{obrazky-figures/sds-planes.eps}
+        \caption{SDS data and control plane.\cite{sdsPlanes}, remade}
+        \label{fig:beanstalkdJobSM}
+    \end{figure}
 
 \section{Beanstalk queue}
 
