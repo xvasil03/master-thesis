@@ -179,39 +179,128 @@ This chapter introduces Object storage and its core concepts along with the unde
     \end{itemize}
 
 \section{Event notifications}
-    \textcolor{gray}{\Blindtext}
-\subsection{Amazon S3 event notifications}
-    \textcolor{gray}{\Blindtext}
-    \begin{figure}[hbt]
-        \centering
-        \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
-        \caption{TODO figure}
-    \end{figure}
-\subsection{Oracle event notifications}
-    \textcolor{gray}{\Blindtext}
-    \begin{figure}[hbt]
-        \centering
-        \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
-        \caption{TODO figure}
-    \end{figure}
+    %introduction
+    An event is a runtime operation, executed by a software element, representing significant change or occurence in system. Event is created in order to make some information avaliable to other software elements not specified by the operation\cite{eventArchitecturalPatterns}.
 
-\chapter{Object Storages}
-    \textcolor{gray}{\Blindtext}
-\section{OpenIO SDS}
+    Event notification is a message, created by system in order to inform other to notify other parts of system that an event has taken place\cite{eventRedHatEventDrivenArch}. Event notifications are used for monitoring and asynchronous job processing.
+
+    In object storage, event notifications are used as mean to notify users or tenants about specific changes and occurences in their bucket or account. Typical event notifications are regarding creating new (or updating existing) objects in bucket. Most object vendors offers Publish/subscribe notifications, which allows users to subscribe to certain type of event notifications using predefined types of rules. Informations about rules specifiying event notifications are usually stored in metadata of upper level (bucket or account).
+
+    \subsection{CloudEvents}
+    Publishers tend to desribe event data differently due non existing standard or format. The lack of common way to describe events means that developers have to learn how handle events for each event source. To solve this problem CloudEvents was created.
+
+    CloudEvents is a specification for describing event data in common way\cite{eventCloudEvents} hosted by Cloud Native Computing Foundation (CNCF)\cite{eventCNCF}. CloudEvents goal is to dramatically simplify event specification and delivery across services, platform and beyond.
+    CloudEvents has been integrated by many popular object storage vendors, such as Oracle Cloud, IBM Cloud Code Engine, Azure, Google Cloud etc.
+
+    \paragraph{Specification}
+    Attributes in CloudEvents specification can be divided into 3 categories.
+
+    REQUIRED Attributes - set of attibures that are required to be included in all events\cite{eventCloudEventsSpec}:
+    \begin{itemize}
+        \item id (string) - event identifier, must not be empty.
+        \item source (URI-reference) - identifies context in which event occured, must not be empty.
+        \item specversion (string) - the version of CloudEvents specification, must not be empty.
+        \item type (string) - value describing type of occured event. Often this attribute is used for policy enforcment, routing and monitoring.
+    \end{itemize}
+
+    Event data attirbutes are attibures containing and describing event data:
+    \begin{itemize}
+        \item datacontenttype (string) - content type of data value (allows data to carry any type of content).
+        \item dataschema (URI) - identifies the schema that data adheres to.
+        \item data - data payload
+    \end{itemize}
+
+    OPTIONAL attibutes:
+    \begin{itemize}
+        \item time - timestamp
+        \item subject (string) - the subject of the event in the context of the event producer.
+        \item extension attributes - custom attibutes allowing external systems to attach metadata to an event.
+    \end{itemize}
+
+    \definecolor{darkpastelred}{rgb}{0.76, 0.23, 0.13}
+    \lstset{
+        string=[s]{"}{"},
+        stringstyle=\color{darkpastelred},
+        comment=[l]{:},
+        commentstyle=\color{black},
+    }
+    Example:
+    \begin{lstlisting}
+    {
+        "specversion" : "1.0",
+        "type" : "com.github.pull_request.opened",
+        "source" : "https://github.com/cloudevents/spec/pull",
+        "subject" : "123",
+        "id" : "A234-1234-1234",
+        "time" : "2018-04-05T17:31:00Z",
+        "comexampleextension1" : "value",
+        "comexampleothervalue" : 5,
+        "datacontenttype" : "text/xml",
+        "data" : "<much wow=\"xml\"/>"
+    }
+    \end{lstlisting}
+
+    \subsection{Amazon S3 event notifications}
+     Amazon Simple Storage Service (S3) is one of the most popular cloud object storages providing REST web service interface. Amazon S3 is reliable, scalable and commercial object storage that manages Web-Scale computing by itself\cite{eventS3}. Amazon S3 had big impact on object storage and most of other object storage vendors crated compatible S3 API for their services.
+
+     One of the monitoring features that Amazon S3 provides is Event Notification, feature offering users to receive notifications when certain event happens in their S3 bucket. To enable such notifications, users needs to create notification configuration that identifies witch events Amazon S3 should publish\cite{eventS3EventNotification}. Notifications are configured at the bucket level and then applied to each object in the bucket.
+
+     Amazon S3 provides limited event destinations to which event notification messages can be send\cite{eventS3EventNotificationDest}:
+     \begin{itemize}
+         \item Amazon Simple Notification Service (Amazon SNS) - flexible, fully managed push messaging service, can be used to send messages to mobile phones or distributed services.
+         \item Amazon Simple Queue Service (Amazon SQS) queues - reliable and scalable hosted queues for storing messages as they travel between computers.
+         \item AWS Lambda - serverless, event-driven compute service. Lambda can run custom code in response to Amazon S3 bucket event (if lambda function writes to same bucket that triggers the notification, it can create an execution loop).
+         \item Amazon EventBridge - serverless event bus used for receiving events from AWS. It allows users to define rules to match events and deliver them to defined targets.
+     \end{itemize}
+
+     By this date, Amazon S3 does not support CloudEvents specification and describes event data in their own way. Some of event types that Amazon S3 can publish are\cite{eventS3EventNotificationDest}:
+
+
+     \renewcommand*{\arraystretch}{1.4}
+     \begin{tabularx}{\textwidth}{|p{0.3\textwidth}|X|}
+         \hline
+         \textbf{Event type} & \textbf{Desription} \\
+         \hline
+         s3:TestEvent & after enabling the event notifications, Amazon S3 publishes a test notification to ensure that topic exist and bucket owner has permissions to publish specified topic. \\
+         \hline
+         s3:ObjectCreated:* & An object was created (regardless on operation). \\
+         \hline
+         s3:ObjectCreated:Put & An object was created by an HTTP PUT operation. \\
+         \hline
+         s3:ObjectCreated:Post & An object was created by HTTP POST operation. \\
+         \hline
+         s3:ObjectCreated:Copy & An object was created an S3 copy operation. \\
+         \hline
+         s3:ObjectCreated:
+
+         CompleteMultipartUpload & An object was created by the completion of a S3 multi-part upload. \\
+         \hline
+         s3:ObjectRemoved:* & An object was removed (regardless on operation). \\
+         \hline
+         s3:ObjectRemoved:Delete & An object was deleted by HTTP DELETE operation. \\
+         \hline
+         s3:ObjectRemoved:
+
+         DeleteMarkerCreated & An versioned object was marked for deletion. \\
+         \hline
+    \end{tabularx}
+
+
+\chapter{OpenIO SDS}
     \textcolor{gray}{\Blindtext}
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
         \caption{TODO figure}
     \end{figure}
-\section{OpenStack Swift}
+\chapter{OpenStack Swift}
     \textcolor{gray}{\Blindtext}
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=0.7\textwidth]{obrazky-figures/placeholder.pdf}
         \caption{TODO figure}
     \end{figure}
-\section{MinIO}
+\chapter{MinIO}
     \textcolor{gray}{\Blindtext}
     \begin{figure}[hbt]
         \centering
