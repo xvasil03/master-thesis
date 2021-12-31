@@ -37,26 +37,26 @@ Structure of thesis - TODO - there will be probably change in chpaters structure
 
 \chapter{Background}
 
-This chapter introduces Object storage and its core concepts along with the underlying technologies. For sufficient understanding its important to explain how Software-defined storage manages data and what types of events can occur inside. The last part of this chapter describes concept of event notifications, why are they important and current interfaces for publishing event notifications to users.
+This chapter introduces Object storage, its core concepts, and the underlying technologies. After introducing the Object storage, for sufficient understanding of this master thesis topic, it is essential to explain how Software-defined storage manages data, and what types of events can occur inside. The last part of this chapter describes the concept of event notifications, why they are essential, and current interfaces for publishing them to users.
 
 \section{Object storage}
     %introduction/concept
-    Object storage, also known as \textit{object-based storage} (OBS), is type of storage that handles data as objects, instead of hierarchical methods used in file systems\cite{objectBasedStorage}. Object stores are designed at handling data as whole objects, making them ideal solution for any unchanging data. Data in object stores are changed by replacing objects or files and therefore object stores are prefered mechanicsm for storing such files\cite{networkStorage}.
+    Object storage, also known as \textit{object-based storage (OBS)}, handles data as objects instead of hierarchical methods used in file systems\cite{objectBasedStorage}. The object storage is designed to handle data as whole objects, making it an ideal solution for any unchanging data. Data in object stores are changed by replacing objects or files, and therefore object stores are the preferred mechanism for storing such files\cite{networkStorage}.
 
     %key koncepts
     %-metadata are stored in same object store device but on separated location
     \subsection{Key concepts}
     Key concepts of object storage are\cite{ibmObjectStorage}:
     \begin{itemize}
-        \item{Objects - An object typically consist of user data and metadata uploaded to objected storage.}
-        \item{Containers/Buckets - represents logical abstraction that is used to provide a data container in object storage. An object with same name in two different containers represents two different objects. This concept is used to segragate data using bucket ownership and a combination of public and secret keys bound to object store accounts which allows users and application to manipulate with data that are authorized for specific type of manipulation (read/write/update).}
-        \item{Metadata - Additional information about data, create and last modified date, size, hash,...}
-        \item{Access Control Lists(ACLs) - used as primary security construct in object storage, stored in account or bucket level and allows owners to grant permissions for certaint operations based on UUID, email, ...}
-        \item{Object Data protection - two main schemes of data protections in object storage are \textbf{Replication} and \textbf{Erasure Coding}.
+        \item Objects - An object typically consist of user data and metadata uploaded to object storage.
+        \item Containers/Buckets - represents logical abstraction used to provide a data container in object storage. An object with the same name in two different containers represents two different objects. This concept segregates data using bucket ownership and a combination of public and secret keys bound to object storage accounts, allowing users and applications to manipulate with authorized data for specific types of manipulation (read/write/update).
+        \item Metadata - Additional information about data, such as date of creation and last modification, size, hash.
+        \item Access Control Lists(ACLs) - used as primary security construct in object storage, stored in account or bucket level and allows owners to grant permissions for certain operations based on UUID, email, ...
+        \item Object Data protection - two primary data protection schemes in object storage are Replication and Erasure Coding.
 
-        Replication is method to ensure data resilience. Data are copied into multiple locations/disks/partitions, in case of failure, data are used from secondary copy, either to recreate original copy or as main copy.
+        \textbf{Replication} is a method used to ensure data resilience. Data are copied into multiple locations/disks/partitions. In case of failure, data are used from a secondary copy to recreate the original copy or as a primary copy.
 
-        Erasure coding is process throught the data is separated into fragments. Then fragments are expanded and encoded with redundant pieces and stored across different storage devices. Erasure coding adds redundancy and allows object storage to tolerate failures.}
+        \textbf{Erasure coding} is a process through which the data is separated into fragments. Then fragments are expanded and encoded with redundant pieces and stored across different storage devices. Erasure coding adds redundancy and allows object storage to tolerate failures.
     \end{itemize}
 
 
@@ -64,9 +64,9 @@ This chapter introduces Object storage and its core concepts along with the unde
     %types of stored informations
     With object storage techniques, each object contains\cite{ibmObjectStorage}:
     \begin{itemize}
-      \item{Data - user specified data that needs to be stored in persistent storage. It can be binary data, text file, image, etc..}
-      \item{Metadata - Extra data describing objects data and can be divided into two types: Device-managed metadata is additional information maintained by storage device and used as part of object management in physical storage.\cite{objectBasedStorage}. Second type is Custom metadata, where user can store any additional information in key and value pairs. In object storage metadata are stored together with the object.}
-      \item{A universally unique identifier (UUID) - This ID, created using hashing process based on object name and some other additional informations, is assigned to each object in a Object storage. Using ID object storage systems are cappable of tell a part objects from one another and ID is used to extract data in system without knowing their physical location/drive and offset.}
+      \item \textbf{Data} - user-specified data that needs to be stored in persistent storage. Such data can be binary data, text file, image, etc.
+      \item \textbf{Metadata} - additional data that describe objects data. Metadata can be divided into two types: Device-managed metadata is additional information maintained by a storage device and used as part of object management in physical storage\cite{objectBasedStorage}. The second type is Custom metadata, to which users can store any additional information in key and value pairs. In object storage, metadata is stored together with the object.
+      \item \textbf{A universally unique identifier (UUID)} - This ID, created using a hashing process based on object name and other additional information, is assigned to each object in object storage. Using ID object storage systems can tell apart objects from one another. ID is also used to extract data in a system without knowing their physical location/drive and offset.
     \end{itemize}
 
     \subsection{Access to object storage}
@@ -74,30 +74,29 @@ This chapter introduces Object storage and its core concepts along with the unde
     %-resfull interface
     %-advantages of this approach
     %-popular intefaces
-    Obeject storage services provide RESTful interface \cite{cloudObjectStorage} over HTTP protocol for objects store and access. This approach allows users to create, read, delete, update or even query objects anytime and anywhere simply by referencing UUID (or using certain attributes for querying), usually with proper authentication process. Most popular interfaces for comunicating with object storages are Amazon S3 (Simple Storage Service) API and OpenStack Swift API.
+    Object storage services provide a RESTful interface \cite{cloudObjectStorage} over HTTP protocol to store and access objects. This approach allows users to create, read, delete, update, or even query objects anytime and anywhere simply by referencing UUID (or using specific attributes for querying), usually with a proper authentication process. The most popular interfaces for communicating with object storages are Amazon S3 (Simple Storage Service) API and OpenStack Swift API.
 
     %comparison to other storage models
     \subsection{Pros and cons of object storage}
     Pros:
     \begin{itemize}
-        \item{Cappable of handling large amount of unstructured data}
-        \item{Reduced TCO and cheap COTS - Object storage is designed to utilize cheap COTS(Commercial off-the-shelf) components, as result Total Cost of Ownership(TCO) is lower then owning home-made Network-Attached Storages(NAS)\cite{networkStorage}.}
-        \item{Unlimited scalability - Since object storages are build on distributed systems, they scale very well compared to traditional storages where they often have upper limit.\cite{openstackObjectStorage}}
-        \item{Wide-open metadata - allows users to store custom metadata and posibility of createing metadata-driven policies, such as compression and tiering.}
+        \item Capable of handling a large amount of unstructured data
+        \item Reduced TCO and cheap COTS - Object storage is designed to utilize cheap COTS(Commercial off-the-shelf) components. As a result Total Cost of Ownership(TCO) is lower than owning homemade Network-Attached Storage(NAS)\cite{networkStorage}.
+        \item Unlimited scalability - Since object storages are built on distributed systems, they scale very well compared to traditional storages, where they often have an upper limit\cite{openstackObjectStorage}.
+        \item Wide-open metadata - allows users to store custom metadata and the possibility of creating metadata-driven policies, such as compression and tiering.
     \end{itemize}
     Cons:
     \begin{itemize}
-        \item{No in-place update - object must be manipulated as whole unit}
-        \item{No locking mechanicsm - object storage does not manage object-level locking and it is up to applications to solve concurrent PUT/GET.}
-        \item{Slower - this makes object storages poor choice for applications that need rapid and frequent acess to data.}
+        \item No in-place update - object must be manipulated as a whole unit.
+        \item No locking mechanism - object storage does not manage object-level locking, and it is up to applications to solve concurrent PUT/GET.
+        \item Slower - this makes object storages a poor choice for applications that need rapid and frequent access to data.
     \end{itemize}
 
 \section{Software-Defined storage}
     %introduction to topic
-    Software-Defined storage(SDS) is storage architecture which separates software storage from hardware allowing greater scalability, flexibility and control over data storage infrastructure.
-    With growth of Software-Defined Networks(SDN) and need of Software-Defined Infrastructure(SDI), which aims to virtualize network resources and separate control plane from data plane, this principle was needed to be apply on Object storages as well\cite{sdsSDSMultiTenantEnv}.
+    Software-Defined Storage(SDS) is a storage architecture that separates software storage from hardware allowing greater scalability, flexibility, and control over the data storage infrastructure. With the growth of Software-Defined Networks(SDN) and the need for Software-Defined Infrastructure(SDI), which aims to virtualize network resources and separate control plane from the data plane, this principle was needed to be applied on Object storage as well\cite{sdsSDSMultiTenantEnv}.
 
-    To overcome limitations of traditional storage infrastructures, the Software-Defined Storage (SDS) is imposed as proper solution to simplify data and configuration management, while improving end-to-end control functionality of conventional storage systems\cite{sdsSurvey}. While traditional storages like  storage area networks (SAN) and network-attached storage (NAS) provides scalability and reliability, SDS provides it with much lower cost by utilizing industry-standard or x86 system and therefore removing dependency on expensive hardware\cite{sdsWPRedHatSDS}.
+    To overcome limitations of traditional storage infrastructures, the Software-Defined Storage (SDS) is imposed as a proper solution to simplify data and configuration management while improving the end-to-end control functionality of conventional storage systems\cite{sdsSurvey}. Furthermore, while traditional storages like storage area networks (SAN) and network-attached storage (NAS) provides scalability and reliability, SDS provides it with much lower cost by utilizing industry-standard or x86 system and therefore removing dependency on expensive hardware\cite{sdsWPRedHatSDS}.
 
     %principles
     % - Scale-out
@@ -106,13 +105,13 @@ This chapter introduces Object storage and its core concepts along with the unde
     % - Masking
     % - Policy Management
     \subsection{Principles}
-    There is no clear definition on criteria for defining software-defined storage, although several key principles can be deducted\cite{sdsGPCloudStorage}:
+    There is no clear definition on criteria for defining software-defined storage, although several fundamental principles can be deducted\cite{sdsGPCloudStorage}:
     \begin{itemize}
-        \item Scale-out - SDS should enable low-cost horizontal scaling (by adding new commodity hardware to existing infrastructure) compared to vertical scaling with more powerfull (and expensive) hardware.
-        \item Customizable - SDS should offer system storage customization to meet specific storage QoS requirements. This will allow users to choose storage solution based on their requirements/performance and avoid unnecessary overpaying.
-        \item Automation - once QoS is defined process of deployment and monitoring on object storage should be automated and done without need to human resources.
-        \item Masking - SDS can mask underlying storage system and distributed system as lons as they provide common storage API and meet required QoS. For SDS can offer block or File API even though data are saved in object storage (like Ceph does).
-        \item Police Management - SDS Software must manage storage according to specified policies and QoS requirements despite being in multi-tenant space. SDS must be cappable to handle failures and autoscale in case of change in workloads.
+        \item \textbf{Scale-out} - SDS should enable low-cost horizontal scaling (by adding new commodity hardware to existing infrastructure) compared to vertical scaling with more powerful (and expensive) hardware.
+        \item \textbf{Customizable} - SDS should offer system storage customization to meet specific storage QoS requirements. This will allow users to choose storage solution based on their requirements/performance and avoid unnecessary overpaying.
+        \item \textbf{Automation} - once QoS is defined process of deployment and monitoring on object storage should be automated and done without the need for human resources.
+        \item \textbf{Masking} - SDS can mask underlying storage system and distributed system as long as they provide common storage API and meet required QoS. SDS can offer block or File API even though data are saved in object storage (like Ceph does).
+        \item \textbf{Police Management} - SDS Software must manage storage according to specified policies and QoS requirements despite being in multi-tenant space. SDS must be capable of handling failures and autoscale in case of change in workloads.
     \end{itemize}
 
 
@@ -140,30 +139,29 @@ This chapter introduces Object storage and its core concepts along with the unde
 
 \section{Beanstalk queue}
 
-    Beanstalk queue or shorter beanstalkd is fast, simple and lighweight working queue\cite{}. Main use case is to manage workflow between different parts of workers of application throught working queues and messages. Beanstalkd was developed for need of Facebook application in order to reduce average response time\cite{beanstalkdOfficial}. Provided by simple protocol design, heavily inspired by memcached, implemented in programming language C, Beanstalkd offers lean architecture which allows it to be installed and used very simply, making it perfect for many use cases\cite{beanstalkdInstall}.
+    Beanstalk queue or shorter beanstalkd is a fast, simple and lightweight working queue\cite{beanstalkdOfficial}. The primary use case is to manage workflow between different parts of workers of application through working queues and messages. Beanstalkd was developed for the need of Facebook application in order to reduce average response time\cite{beanstalkdOfficial}. Provided by simple protocol design, heavily inspired by Memcached, implemented in programming language C, Beanstalkd offers lean architecture, which allows it to be installed and used very simply, making it perfect for many use cases\cite{beanstalkdInstall}.
 
 
     \subsection{Beanstalkd elements}
-    Beanstalkd is priority queue with server-client architecture. Server represents queues where jobs are saved based on priority. Beanstalkd architecture is composed from several components:
+    Beanstalkd is a priority queue with server-client architecture. The server represents queues where jobs are saved based on priority. Beanstalkd architecture is composed of several components:
     \begin{itemize}
-        \item Jobs - tasks stored by client
+        \item Jobs - tasks stored by the client
         \item Tubes - used for storing tasks, each tube contains a ready queue and a delay queue.
-        \item Producer - create and send jobs to beanstalkd using command "put"
-        \item Consumer - process "listening" on assigned tube, reserves and consumes jobs from tube
+        \item Producer - creates and sends jobs to beanstalkd using command "put".
+        \item Consumer - process "listening" on an assigned tube, reserves and consumes jobs from the tube.
     \end{itemize}
 
     \subsection{Job Lifecycle}
-    Each job is uniquely assigned to one worker at a time. A job in beanstalkd is created by client using "put" command. While being in tube, job can be in next states\cite{beanstalkdProtocol}:
+    Each job is uniquely assigned to one worker at a time. The client creates a job and inserts it to beanstalkd tube using "put" command. While being in the tube, the job can be in next states\cite{beanstalkdProtocol}:
     \begin{itemize}
-        \item READY - the task is free and can be executed immediately by consumer.
-        \item DELAYED - the task has assigned delay time that needs to expire before execution. After delay time expires, beanstalkd will automaticly change it state to READY.
-        \item RESERVED - the task is reserved and is being executed by consumer. Beanstalkd is responsible for checking whether the task is completed in time (TTR - Time to run).
-        \item BURIED - reserved task, the task will not be removed nor executed until client decides. This state is often used for futher inspection in debug process when failure or undefined behavior occurs during task execution.
-        \item DELETED - the task is deleted from tube, beanstalkd no longer maintains these jobs.
+        \item \textbf{Ready} - the task is free and can be executed immediately by the consumer.
+        \item \textbf{Delayed} - the task has assigned delay time that needs to expire before execution. After delay time expires, beanstalkd will automatically change its state to READY.
+        \item \textbf{Reserved} - the task is reserved and is being executed by the consumer. Beanstalkd is responsible for checking whether the task is completed in time (TTR - Time to run).
+        \item \textbf{Buried} - reserved task, the task will not be removed nor executed until the client decides. This state is often used for further inspection in debugging process when failure or undefined behavior occurs during task execution.
+        \item \textbf{Deleted} - the task is deleted from the tube, beanstalkd no longer maintains these jobs.
     \end{itemize}
 
-    Figure \ref{fig:beanstalkdJobSM} describes life cycle of job in beanstalkd tube. Job is created by Producer using put command. Beanstalkd allows Producer to add delay time before task will be ready for execution, which sets job state to DELAYED. After delay time expires, beanstalkd will automaticly change job state to READY. Producer can specify job priority and jobs with READY state are stored in priority queue. Job with biggest priority is reserved and executed by Consumer. After succesfully executing the task, Consumer will delete job from beanstalkd. If some error occured, Consumer can burry the task. Consumer can decide that is not interested in compliting reserved task. Using release command (with optional delay) job state will be changed back to READY (or DELAY).
-    Jobs with BURRIED state will not be touch by beanstalkd server until client "kicks" them to READY state.
+    Figure \ref{fig:beanstalkdJobSM} describes the life cycle of a job in beanstalkd tube. Job is created by Producer using put command. Beanstalkd allows the Producer to add delay time before the task is ready for execution, setting the job state to DELAYED. After delay time expires, beanstalkd will automatically change job state to READY. The Producer can specify job priority and jobs with the READY state are stored in the priority queue. A job with the biggest priority is reserved and executed by a Consumer. After successfully executing the task, the Consumer will delete the job from beanstalkd. If some error occurs, the Consumer can bury the task. The Consumer can decide that he is not interested in completing the reserved task. Using the release command (with optional delay) job state will be changed back to READY (or DELAY). Jobs with the BURIED state will not be touched by beanstalkd server until the client "kicks" them to READY state.
 
     \begin{figure}[hbt]
         \centering
@@ -175,47 +173,44 @@ This chapter introduces Object storage and its core concepts along with the unde
 
     \subsection{Key characteristics}
     Key beanstalkd characteristics are:
-    \begin{itemize}
-        \item Asynchronous - beanstalkd allows producers to put jobs in queue and workers can process them later.
-        \item Distributed - in a same way as memchaced, beanstalkd can be distributed although this distribution is handled by clients. The beanstalkd server doesn't know anything about other beanstalkd instances that are running.
-        \item Persistent - beanstalkd offeres support for persistent jobs durring which all jobs are written to binlog. In case of power outrage, after restarting beanstalkd instance will recover jobs content from the logs.
-        \item Not secured - beanstalkd is designed to be runned in private/secured network. Therefore it does not support authentication nor authorization.
-        \item Scalability - beanstalkd can be scaled horizontally, although it must be done on client side, where each client would connect to multiple servers and then use specific algorithms(e.g. Round-robin) to switch between the different servers.
-    \end{itemize}
+
+    \paragraph{Asynchronous}- beanstalkd allows producers to put jobs in the queue, and workers can process them later.
+    \paragraph{Distributed}- in the same way as Memcached, beanstalkd can be distributed, although this distribution is handled by clients. The beanstalkd server does not know anything about other beanstalkd running instances.
+    \paragraph{Persistent}- beanstalkd offers support for persistent jobs during which all jobs are written to binlog. In case of a power outage, after restarting beanstalkd instance, it will recover jobs content from the logs.
+    \paragraph{Not secured}- beanstalkd is designed to be run in a private/secure network. Therefore it does not support authentication or authorization.
+    \paragraph{Scalability}- beanstalkd can be scaled horizontally, although it must be done on the client side, where each client would connect to multiple servers and then use specific algorithms(e.g., Round-robin) to switch between the different servers.
 
 \section{Event notifications}
     %introduction
-    An event is a runtime operation, executed by a software element, representing significant change or occurence in system. Event is created in order to make some information avaliable to other software elements not specified by the operation\cite{eventArchitecturalPatterns}.
+    An \textit{event} is a runtime operation executed by a software element, representing a significant change or occurrence in a system. Event is created in order to make some information available to other software elements not specified by the operation\cite{eventArchitecturalPatterns}.
 
-    Event notification is a message, created by system in order to inform other to notify other parts of system that an event has taken place\cite{eventRedHatEventDrivenArch}. Event notifications are used for monitoring and asynchronous job processing.
+    \textbf{Event notification} is a message created by a system in orderto notify other parts of the system that an event has taken place\cite{eventRedHatEventDrivenArch}. Event notifications are usually used for monitoring and asynchronous job processing.
 
-    In object storage, event notifications are used as mean to notify users or tenants about specific changes and occurences in their bucket or account. Typical event notifications are regarding creating new (or updating existing) objects in bucket. Most object vendors offers Publish/subscribe notifications, which allows users to subscribe to certain type of event notifications using predefined types of rules. Informations about rules specifiying event notifications are usually stored in metadata of upper level (bucket or account).
+    In object storage, event notifications are used to notify users or tenants about specific changes and occurrences in their bucket or account. Typical event notifications include creating new (or updating existing) objects in the bucket. In addition, most object vendors offer Publish/subscribe notifications, allowing users to subscribe to certain types of event notifications using predefined rules. Information about rules specifying event notifications is usually stored in the upper-level metadata (bucket or account).
 
     \subsection{CloudEvents}
-    Publishers tend to desribe event data differently due non existing standard or format. The lack of common way to describe events means that developers have to learn how handle events for each event source. To solve this problem CloudEvents was created.
+    Publishers tend to describe event data differently due to non-existing standards or formats. The lack of a common way to describe events means developers have to learn how to handle events for each event source. To solve this problem, CloudEvents was created.
 
-    CloudEvents is a specification for describing event data in common way\cite{eventCloudEvents} hosted by Cloud Native Computing Foundation (CNCF)\cite{eventCNCF}. CloudEvents goal is to dramatically simplify event specification and delivery across services, platform and beyond.
+    CloudEvents is a specification for describing event data in common way\cite{eventCloudEvents} hosted by Cloud Native Computing Foundation (CNCF)\cite{eventCNCF}. CloudEvents goal is to dramatically simplify event specification and delivery across services, platforms and beyond.
     CloudEvents has been integrated by many popular object storage vendors, such as Oracle Cloud, IBM Cloud Code Engine, Azure, Google Cloud etc.
 
-    \paragraph{Specification}
-    Attributes in CloudEvents specification can be divided into 3 categories.
-
-    REQUIRED Attributes - set of attibures that are required to be included in all events\cite{eventCloudEventsSpec}:
+    Attributes in CloudEvents specification can be divided into 3 categories:
+    \paragraph{Required attributes} - set of attibures that are required to be included in all events\cite{eventCloudEventsSpec}:
     \begin{itemize}
         \item id (string) - event identifier, must not be empty.
         \item source (URI-reference) - identifies context in which event occured, must not be empty.
         \item specversion (string) - the version of CloudEvents specification, must not be empty.
-        \item type (string) - value describing type of occured event. Often this attribute is used for policy enforcment, routing and monitoring.
+        \item type (string) - value describing the type of occurred event. Often this attribute is used for policy enforcement, routing and monitoring.
     \end{itemize}
 
-    Event data attirbutes are attibures containing and describing event data:
+    \paragraph{Event data attirbutes} - attibures containing and describing event data:
     \begin{itemize}
         \item datacontenttype (string) - content type of data value (allows data to carry any type of content).
         \item dataschema (URI) - identifies the schema that data adheres to.
         \item data - data payload
     \end{itemize}
 
-    OPTIONAL attibutes:
+    \paragraph{Optional attributes}:
     \begin{itemize}
         \item time - timestamp
         \item subject (string) - the subject of the event in the context of the event producer.
@@ -228,8 +223,9 @@ This chapter introduces Object storage and its core concepts along with the unde
         stringstyle=\color{darkpastelred},
         comment=[l]{:},
         commentstyle=\color{black},
+        caption=Example of event described using CloudEvents specification and JSON
     }
-    Example:
+
     \begin{lstlisting}
     {
         "specversion" : "1.0",
@@ -246,19 +242,19 @@ This chapter introduces Object storage and its core concepts along with the unde
     \end{lstlisting}
 
     \subsection{Amazon S3 event notifications}
-     Amazon Simple Storage Service (S3) is one of the most popular cloud object storages providing REST web service interface. Amazon S3 is reliable, scalable and commercial object storage that manages Web-Scale computing by itself\cite{eventS3}. Amazon S3 had big impact on object storage and most of other object storage vendors crated compatible S3 API for their services.
+    Amazon Simple Storage Service (S3) is one of the most popular cloud object storages providing a REST web service interface. Amazon S3 is reliable, scalable, commercial and one of the most popular object storage that manages Web-Scale computing by itself\cite{eventS3}. As a result, Amazon S3 has a big impact on object storage and most other object storage vendors crated compatible S3 API for their services.
 
-     One of the monitoring features that Amazon S3 provides is Event Notification, feature offering users to receive notifications when certain event happens in their S3 bucket. To enable such notifications, users needs to create notification configuration that identifies witch events Amazon S3 should publish\cite{eventS3EventNotification}. Notifications are configured at the bucket level and then applied to each object in the bucket.
+    One of the monitoring features that Amazon S3 provides is Event Notification, which offers users to receive notifications when certain events happen in their S3 bucket. To enable such notifications, users need to create a notification configuration that identifies which events Amazon S3 should publish\cite{eventS3EventNotification}. Notifications are configured at the bucket level and then applied to each object in the bucket.
 
-     Amazon S3 provides limited event destinations to which event notification messages can be send\cite{eventS3EventNotificationDest}:
-     \begin{itemize}
-         \item Amazon Simple Notification Service (Amazon SNS) - flexible, fully managed push messaging service, can be used to send messages to mobile phones or distributed services.
-         \item Amazon Simple Queue Service (Amazon SQS) queues - reliable and scalable hosted queues for storing messages as they travel between computers.
-         \item AWS Lambda - serverless, event-driven compute service. Lambda can run custom code in response to Amazon S3 bucket event (if lambda function writes to same bucket that triggers the notification, it can create an execution loop).
-         \item Amazon EventBridge - serverless event bus used for receiving events from AWS. It allows users to define rules to match events and deliver them to defined targets.
-     \end{itemize}
+    Amazon S3 provides limited event destinations to which event notification messages can be send\cite{eventS3EventNotificationDest}:
+    \begin{itemize}
+        \item Amazon Simple Notification Service (Amazon SNS) - flexible, fully managed push messaging service, can be used to send messages to mobile phones or distributed services.
+        \item Amazon Simple Queue Service (Amazon SQS) queues - reliable and scalable hosted queues for storing messages as they travel between computers.
+        \item AWS Lambda - serverless, event-driven compute service. Lambda can run custom code in response to the Amazon S3 bucket event (if the lambda function writes to the same bucket that triggers the notification, it can create an execution loop).
+        \item Amazon EventBridge - serverless event bus service used to receive events from AWS. It allows users to define rules to match events and deliver them to defined targets.
+    \end{itemize}
 
-     By this date, Amazon S3 does not support CloudEvents specification and describes event data in their own way. Some of event types that Amazon S3 can publish are\cite{eventS3EventNotificationDest}:
+    By this date, Amazon S3 does not support CloudEvents specification and describes event data in its own way. Some of event types that Amazon S3 can publish are\cite{eventS3EventNotificationDest}:
 
 
      \renewcommand*{\arraystretch}{1.4}
@@ -292,17 +288,18 @@ This chapter introduces Object storage and its core concepts along with the unde
 
 
 \chapter{OpenIO SDS}
-    OpenIO Software-defined storage is open source object storage that is perfectly cappable of traditional use cases (such as archiving, big data, cloud) but at same time, combining with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create application that need much more sofisticated back-end operations. These applications includes industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. OpenIO SDS is event-driven storage with ability to itercept events seamlessly and transparently to the rest of the stack.
+    OpenIO Software-defined storage is open source object storage that is perfectly capable of traditional use cases (such as archiving, big data, cloud). However, at the same time, combined with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create an application that needs much more sophisticated back-end operations. These applications include industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. In addition, OpenIO SDS is event-driven storage with the ability to intercept events seamlessly and transparently to the rest of the stack.
 
     \section{Key characteristics}
     \subsection*{Hardware agnostic}
-    OpenIO SDS is fully software-defined storage cappable of running on x86 or ARM hardware with minimal requirements. Cluster nodes can be different from each other, allowing different generations, types and capacities to be combined without affecting a performance or efficiency\cite{oioKeyChars}.
-    OpenIO has built-in support for heterogeneous hardware allowing every node to be used at its matixmum performance.
+    OpenIO SDS is fully software-defined storage capable of running on x86 or ARM hardware with minimal requirements. Cluster nodes can be different from each other, allowing different generations, types and capacities to be combined without affecting a performance or efficiency\cite{oioKeyChars}.
+    OpenIO has built-in support for heterogeneous hardware allowing every node to be used at its maximum performance.
     \subsection*{No SPOF architecture}
-    Every single service used to serve data is redundant. From object chunks stored in disck, to directory level, every information is duplicated. As a result there is no single point of failure (SPOF) in cluster and node can be shutdown without affecting overal avaliability or integrity\cite{oioCoreSolution}.
+    Every single service used to serve data is redundant from object chunks stored in a disc to the directory level, every information is duplicated. As a result, there is no single point of failure (SPOF) in the cluster and a node can be shutdown without affecting overall availability or integrity\cite{oioCoreSolution}.
     \subsection*{Cluster organization}
-    Instead of traditional cluser ring-like layout, OpenIO SDS is based on grid of nodes \ref{fig:oioArch}. It is flexible and resource conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table aglorithm. Instead OpenIO SDS uses distributed directory for organizing data and metadata hash tables, whcih allows the software to attain same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
+    Instead of a traditional cluster ring-like layout, OpenIO SDS is based on a grid of nodes \ref{fig:oioArch}. It is flexible and resource-conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table algorithm. Instead, OpenIO SDS uses distributed directory for organizing data and metadata hash tables, which allows the software to attain the same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
 
+    %todo check gramma
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/openio-architecture.eps}
@@ -322,7 +319,7 @@ This chapter introduces Object storage and its core concepts along with the unde
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=0.5\textwidth]{obrazky-figures/openio-data-organization.eps}
-        \caption{Object data organization in OpenIO SDS.\cite{oioArch}}
+        \caption{Object data organization in OpenIO SDS.\cite{oioCoreSolution}}
         \label{fig:oioDataOrganization}
     \end{figure}
 
