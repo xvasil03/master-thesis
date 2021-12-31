@@ -292,6 +292,99 @@ This chapter introduces Object storage and its core concepts along with the unde
 
 
 \chapter{OpenIO SDS}
+    OpenIO Software-defined storage is open source object storage that is perfectly cappable of traditional use cases (such as archiving, big data, cloud) but at same time, combining with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create application that need much more sofisticated back-end operations. These applications includes industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. OpenIO SDS is event-driven storage with ability to itercept events seamlessly and transparently to the rest of the stack.
+
+    \section{Key characteristics}
+    \subsection*{Hardware agnostic}
+    OpenIO SDS is fully software-defined storage cappable of running on x86 or ARM hardware with minimal requirements. Cluster nodes can be different from each other, allowing different generations, types and capacities to be combined without affecting a performance or efficiency\cite{oioKeyChars}.
+    OpenIO has built-in support for heterogeneous hardware allowing every node to be used at its matixmum performance.
+    \subsection*{No SPOF architecture}
+    Every single service used to serve data is redundant. From object chunks stored in disck, to directory level, every information is duplicated. As a result there is no single point of failure (SPOF) in cluster and node can be shutdown without affecting overal avaliability or integrity\cite{oioCoreSolution}.
+    \subsection*{Cluster organization}
+    Instead of traditional cluser ring-like layout, OpenIO SDS is based on grid of nodes \ref{fig:oioArch}. It is flexible and resource conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table aglorithm. Instead OpenIO SDS uses distributed directory for organizing data and metadata hash tables, whcih allows the software to attain same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=1\textwidth]{obrazky-figures/openio-architecture.eps}
+        \caption{Layered view on OpenIO SDS architecture.\cite{oioArch}}
+        \label{fig:oioArch}
+    \end{figure}
+
+
+    \subsection*{Tiering}
+    With tiering, OpenIO SDS offers users to configure pool containing group of hardware which then can be used for storing specific types of objects. For example, user can create pool of high performance hard disks (e.g. SSDs) and use the pool for storing objects that require low latency.
+    This feature is realised by mechanism called storage policies. Multiple storage policies can be defined in one particual namespace. Storage policies can also be used for specifying how many replicas should be created for specific dataset\cite{oioCoreSolution}.
+
+    \section{Data organization}
+    Multi-tenancy is one of the core concepts in OpenIO SDS. Data objects are stored within following hierarchy: Namespace/Account/Container/Object \ref{fig:oioDataOrganization}. Multiple namespaces can be configured in each cluster, providing multi-region/zone logical layouts for applications and segregated workloads depending on a tenant or geo-distribution need\cite{oioSdsConcepts}.
+    There is no classic subdirectory tree. Object are stored in flat structure in container level. Like many other object storages, there is a way to simulate filesystem.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=0.5\textwidth]{obrazky-figures/openio-data-organization.eps}
+        \caption{Object data organization in OpenIO SDS.\cite{oioArch}}
+        \label{fig:oioDataOrganization}
+    \end{figure}
+
+    \subsection{Namespace}
+    A coherent set of network services working together to run OpenIO’s solutions. It hosts services and provides operations such as service configuration and monitoring.
+
+    \subsection{Account}
+    An account usually represents a tenant and is the top level of data organisation. Each account owns and manages a collection of containers. Accoun keep track of namespace usage for each customer (i.e. bytes occupied by all of a customer's objects)\cite{oioCoreSolution}.
+
+    \subsection{Container}
+    Container represents a object bucket. Each container belogs to one (and only one) account and is identified by a name which is unique within the account. The contaier carries additional information specifiying how to manages its objects (e.g. how to secure them)\cite{oioCoreSolution}.
+
+    \subsection{Object}
+    Object is the smalles data unit visiable by customer and represents a named BLOB with metadata. OpenIO SDS allows several objects to be stored in a container, and are considered as versions of same object. Classic API operations (PUT/GET/DELETE) will be directed towards object with latest version. If size of object is higher then specified limit at the namespace level, the object will be divided into chunks of data. This allows capacity optimalization as well as distributed reads that could be particularly useful for high-speed video streaming of large medias for instance\cite{oioCoreSolution}.
+
+    %\section{Services} maybe include?
+    \section{Serverless computing}
+    %what is serverless computing
+    \subsection{Grid For Apps}\label{sec:oioGridForApps}
+
+    Similarly to Amazon AWS Lambda, OpenIO offers event-driven compute service called Grid for Apps that works on top of OpenIO.
+
+    Grif for Apps intercepts all the events that happen in the storage layer, and based on user configuration, triggers specific application or script to act on data (metadata) stored in object storage\cite{oioNextGen}. The application is executed in cluster nodes and utilizes free unused resources avaliable in the cluster. This impove efficiency (less data moving, since object data are already avaliable), and saves money (no need for external resources)\cite{oioNextGen}.
+
+    Grid for Apps allows customers to perform operations such as metadata enrichment, data indexing and search (e.g. indexing metadata to Elasticsearch), pattern recognition, machine learning, data filterning, monitoring, etc\cite{oioNextGen}.
+
+    Grid for Apps in OpenIO is realised using service event-agent and beanstalkd queue.
+
+    \subsection{Event-agent}
+    Event-agent is OpenIO service responsible for handling asynchronous jobs. It relies on beanstalkd backend to manages jobs. Event-agent key characteristics are\cite{oioSdsServices}:
+    \begin{itemize}
+        \item Stateless
+        \item CPU intensive
+        \item Must be deployed on ever server of the cluster
+    \end{itemize}
+
+    Every event that occurs in OpenIO is inserted in beanstalkd tube. Event-agent is listening the beanstalkd tube and consumes jobs from it. Consumers are produced using Eventlet Network Library \cite{oioEventlet}. Number or workers can be configured.
+
+    In event-agent, user can specify handlers for each type of events in event-handler.conf.
+    Some of the event types in OpenIO are storage.content.new, storage.container.deleted, etc.
+
+    Events handler is defined as pipeline containing applications that will react to the event. For example, deleting an object will invoke storage.content.deleted event. Event-agent will handle the event using content\_cleaner application, which in fact deletes objects chunks from object storage.
+
+    \begin{lstlisting}
+    [handler:storage.content.deleted]
+    pipeline = content_cleaner
+
+    [handler:storage.content.new]
+    pipeline = notify
+
+    [filter:content_cleaner]
+    use = egg:oio#content_cleaner
+
+    [filter:notify]
+    use = egg:oio#notify
+    tube = oio-rebuild
+    queue_url = ${QUEUE_URL}
+    \end{lstlisting}
+    %todo caption
+
+    OpenIO offers users to process events outside of event-agent. In order to do that, user can use application "notify", which will simply send event to specified beanstalkd tube. After that user can create custom Consumer that will process the job from beanstalkd tube.
+
 \chapter{OpenStack Swift}
 \chapter{MinIO}
 
