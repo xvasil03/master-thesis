@@ -82,7 +82,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     \begin{itemize}
         \item Capable of handling a large amount of unstructured data
         \item Reduced TCO and cheap COTS - Object storage is designed to utilize cheap COTS(Commercial off-the-shelf) components. As a result Total Cost of Ownership(TCO) is lower than owning homemade Network-Attached Storage(NAS)\cite{networkStorage}.
-        \item Unlimited scalability - Since object storages are built on distributed systems, they scale very well compared to traditional storages, where they often have an upper limit\cite{openstackObjectStorage}.
+        \item Unlimited scalability - Since object storages are built on distributed systems, they scale very well compared to traditional storages, where they often have an upper limit\cite{swiftEssentials}.
         \item Wide-open metadata - allows users to store custom metadata and the possibility of creating metadata-driven policies, such as compression and tiering.
     \end{itemize}
     Cons:
@@ -299,7 +299,6 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     \subsection*{Cluster organization}
     Instead of a traditional cluster ring-like layout, OpenIO SDS is based on a grid of nodes \ref{fig:oioArch}. It is flexible and resource-conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table algorithm. Instead, OpenIO SDS uses distributed directory for organizing data and metadata hash tables, which allows the software to attain the same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
 
-    %todo check gramma
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/openio-architecture.eps}
@@ -334,6 +333,8 @@ This chapter introduces Object storage, its core concepts, and the underlying te
 
     \subsection{Object}
     Object is the smallest data unit visible by a customer and represents a named BLOB with metadata. OpenIO SDS allows several objects to be stored in a container and are considered as versions of the same object. Classic API operations (PUT/GET/DELETE) will be directed towards an object with the latest version. If the size of an object is larger than the specified limit at the namespace level, the object will be divided into chunks of data. This behavior allows capacity optimization as well as distributed reads that could be particularly useful for high-speed video streaming of large media\cite{oioCoreSolution}.
+
+    %todo authentication and acl?
 
     %\section{Services} maybe include?
     \section{Serverless computing}
@@ -387,6 +388,153 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     OpenIO offers users to process events outside of the event-agent. In order to do that, users can use the application "notify" which will send an event to a specified beanstalkd tube. Then a user can create a custom consumer process that will execute the job from beanstalkd tube. Example of such configuration is displayed in listing \ref{lst:event-agent-handlers}
 
 \chapter{OpenStack Swift}
+    This chapter introduces OpenStack object storage (code name Swift) and desrcibes its key features. Futhermore, this chapter elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
+
+    OpenStack Swift is an open source object storage developed by Rackspace, company that together with NASA created OpenStack project. After becoming a open source project, Swift became a leading open source object storage supported and developed by many popular IT companies, such as Red Hat, HP, Intel, IBM, and others.
+
+    OpenStack Swift is multi-tenant, scalable and durable object-storage capable of storing large amounts of unstructured data at low cost\cite{swiftOpenStackSwift}.
+
+    \section{Key characteristics}
+    Beside standard object storage characteristics (like scalability, durability, hardware agnostic, etc), some of the keys OpenStack Swift characteristics:
+
+    \paragraph{Multi-regional capability}
+    OpenStack Swift has distributed architecture. Data can be distributed and replicated into multiple data centers, although negative effect could be higher latency between them. Distrubution can provide high availability of data and recovery site\cite{swiftOpenStackSwift}.
+
+    \paragraph{No SPOF}
+    With all data bieing replicated and distributed, there is no single proof of failure in OpenStack Swift architecture.
+
+    \paragraph{Developer-friendliness}
+    OpenStack Swift offers many built-in features that developers and users can use. some of the most interesting built-in features are\cite{swiftOpenStackSwift}:
+    \begin{itemize}
+        \item \textbf{Automatically expiring objects} - Objects can be given expiration time, after which objects become invalid and deleted from object storage.
+        \item \textbf{Quotas} - Storage limits can be configurated on container/account level.
+        \item \textbf{Versioned objects} - User can store new version of object, while object storage keeps older versions.
+        \item \textbf{Access control lists} - Users can configure access to their data to give or deny permission for reading or writing data to other users.
+    \end{itemize}
+
+    \paragraph{Middleware support}
+    - OpenStack Swift allows adding custom middlewares, which will be run directly on storage system\cite{swiftEssentials}. This feature can be used for monitoring purposes, for example informing users or other applications about new objects in storage using Webhook middleware.
+
+    \paragraph{Large object support}
+    - By default, OpenStack Swift has a limit on single uploaded object which is 5GB. However, using segmentation, size of single object can be virtually unlimited. This option offers possible higher upload speed, in case of parallel upload\cite{swiftLOS}.
+
+    \paragraph{Partial object retrival}
+    User can retrieve part of object, for example just a portion of movie object file\cite{swiftImplementingCloudStorage}.
+
+    \section{Data model}
+    OpenStack Swift allows users to store unstructured data objects with a canonical name containing \textit{account}, \textit{container} and \textit{object} in given order\cite{swiftOpenStackSwift}. The account names must be unique in cluster, the container name must be unique in the account space and the object names must be unique in container. Other then that, if containers have same name but belong to different account, then they represent different storage locations. Same principle applies to objects, if objects have same name, but not same container and account name, then these objects are different.
+
+    \subsection{Account}
+    Accounts are root storage location for data. Each account contains list of containers within the account and metadata stored as key-value pairs. Accounts are stored in account database. In OpenStack Swift, account is \textbf{storage account} (more like storage location) and \textbf{do not represent a user identity}\cite{swiftOpenStackSwift}.
+
+    \subsection{Container}
+    Containers are user-defined storage location in account namespace where objects are stored. Containers are one level bellow accounts, therefore they are not unique in the cluster. Each container have a list of objects within the container and metadata stored as key-value pairs. Containers are stored in container database\cite{swiftOpenStackSwift}.
+
+    \subsection{Object}
+    Object represents data stored in OpenStack Swift. Each object belongs to one (and only one) container. Object can have metadata stored as key-value pairs. Swift stores multiple copies of object across the cluster to ensure durability and availability. Swift does this by assinging object to \textit{partition}, which is mapped to multiple drives and each driver will contain object copy\cite{swiftOpenStackSwift}.
+
+    \section{Server Processes}
+    The path towards data in OpenStack Swift consists of four main software services: \textbf{Proxy server}, \textbf{Account server}, \textbf{Continaer server} and \textbf{Object server}. Typically Account, Container and Object server are located on same machine creating \textbf{Storage node}.
+
+    \subsection{Proxy server}
+    The proxy server is service responsible for communication with external clients. For each request, it will look up storage location(node) for account,container or object and route the request accordingly\cite{SwiftArchitecturalOverview}. Proxy server is responsible for handling a lot of failures. For example, when a client send PUT request to OpenStack Swift, proxy server will determinate with nodes should store object. If some node fails, a proxy server will choose hand-off node to write data. When majority of nodes respond successfully, then the server proxy will return a success response code\cite{swiftOpenStackSwift}.
+
+    \subsection{Account server}
+    Account server stores informations about containers in a a particular account to SQL database. It is responsible for listing containers. It does not know where specific container are, just what containers are in an account\cite{SwiftArchitecturalOverview}.
+
+    \subsection{Container server}
+    Container server is similar to account server, execept it is responsible for listing objects and also does not know where specific objects are\cite{SwiftArchitecturalOverview}.
+
+    \subsection{Object server}
+    The Object Server is blob storage capable of storing, retriving and deleteing objects. Objects are stored as binary files to filesysem, where metadata are stored in file's extended attributes (xattrs). This requires filesystem with support of such attributes. Each object is stored using hash value of object path (account/container/object) and timestamp. This allows storing multiple versions of object. Since last write wins (due to timestamp), its ensured that correct object version is served\cite{SwiftArchitecturalOverview}.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=0.75\textwidth]{obrazky-figures/swift-servers.eps}
+        \caption{OpenStack Swift servers architecture.}
+        \label{fig:beanstalkdJobSM}
+    \end{figure}
+
+    \section{Middlewares}
+    Using Python WSGI middleware users can add functionalities and behaviors to OpenStack Swift. Most middlewares are added to the Proxy server, but can also be part of other servers (account server, container server or object server).
+
+    Middlewares are added by changing configuration of servers. In example \ref{lst:swiftMiddleware}
+    webhook middleware is added into proxy server by changing its pipeline (\textit{pipeline:main}). Middlewares are executed in given order (first will be called webhook middleware then proxy-server middleware).
+
+    Some of the middlewares are required and will be automatically inserted by swift code\cite{swiftMiddleware}.
+
+    \subsection{Interface}
+    OpenStack Swift servers are implemented using Python WSGI applications. Therefore only Python WSGI middlewares are accepted in OpenStack Swift.
+
+    In \ref{lst:swift-healthcheck} is example of simplified healthcheck middleware. Constructor takes two agruments, first is WSGI application and second is configuration of middleware defined using Python Paste framework in proxy-server.conf. Middlware must have call method, containing the request environment informations and response from previous called middleware. Middleware can preform some operations and call next middleware in pipeline, or inercept a request. In healtcheck example, if path directs to /healtcheck , middleware will return HTTP Response and other middlewares in pipeline will not be called.
+
+    Method filter\_factory is used by Python Paste framework to instantiate middleware.
+
+    \definecolor{codegreen}{rgb}{0,0.6,0}
+    \definecolor{codegray}{rgb}{0.5,0.5,0.5}
+    \definecolor{codepurple}{rgb}{0.58,0,0.82}
+    \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2,
+    caption=Example of healthcheck middleware in OpenStack Swift,
+    label=lst:swift-healthcheck
+}
+
+\lstset{style=mystyle}
+
+\begin{lstlisting}[language=Python]
+import os
+from swift.common.swob import Request, Response
+
+class HealthCheckMiddleware(object):
+    def __init__(self, app, conf):
+        self.app = app
+
+    def __call__(self, env, start_response):
+        req = Request(env)
+        if req.path == '/healthcheck':
+            return Response(request=req, body=b"OK", content_type="text/plain")(env, start_response)
+        return self.app(env, start_response)
+
+def filter_factory(global_conf, **local_conf):
+    conf = global_conf.copy()
+    conf.update(local_conf)
+
+    def healthcheck_filter(app):
+        return HealthCheckMiddleware(app, conf)
+    return healthcheck_filter
+\end{lstlisting}
+
+    \subsection{Metadata}
+    OpenStack Swift separates metadata into 3 categories based on their use:
+    \begin{itemize}
+        \item \textbf{User Metadata} - User metadata takes form \textbf{X-<type>-Meta-<key>: <value>}, where \textbf{type} represent resource type(i.e. account, container, object), where \textbf{<key>} and \textbf{<value>} are set by user. User metadata remain persistent until are updated using new value or removed using header  \textbf{X-<type>-Meta-<key>} with no value or a header \textbf{X-Remove-<type>-Meta-<key>: <ignored-value>}.
+        \item \textbf{System Metadata} - System metadata takes the form of \textbf{X-<type>-Sysmeta-<key>: <value>}, where \textbf{type} represent resource type(i.e. account, container, object) and \textbf{<key>} and \textbf{<value>} are set by internal service in Swift WSGI Server.
+        All headers containing system metadata are deleted from client request.
+
+        System metadata are visible only inside Swift provides mean to store potentially sensitive informations regarding Swift resources.
+        \item \textbf{Object Transient-Sysmeta} - System metadata takes the form of \textbf{X-Object-Transient-Sysmeta-<key>: <value>}. Transient-sysmeta have similar behavior as system metadata, they can be access only within Swift and headers containing Transient-sysmeta are droped. If middleware want to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
+    \end{itemize}
+
+
+
+
+
 \chapter{MinIO}
 
 \chapter{Solution draft}
