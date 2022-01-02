@@ -532,14 +532,64 @@ def filter_factory(global_conf, **local_conf):
     \end{itemize}
 
 
-
-
-
 \chapter{MinIO}
 
 \chapter{Solution draft}
 \section{Current state}
+    \subsection{OpenIO SDS}
+    OpenIO Software-Defined storage has event-driven acrhitecture, capable of publishing events to Beanstalkd using \textit{event-agent service} and \textit{Notify filter}.
+    Main disadvantage of current event publishing state is that configuration describing what type of events should be published is applied to whole storage. Since OpenIO SDS is multi-tenant space, some tenants might be interested in different events inside storage. The best use-case solution would be to let tenats decide what kind of events should be published in storage assigned to them.
+
+    Second disadvantage is \textbf{lack of event filters}. Tenants might be interested in events involving specific objects or buckets that satisfy specific rules (for example object prefix, size, etc).
+
+    Third disadvantage is that events are published only to beanstalkd queue. OpenIO SDS does not support any other destinations for event pubslishing. Since events can be used for monotoring, there should be proper interface, allowing users to define destionation for even pubslishing (i.e. Kafka, Prometheus, Grafana).
+
+    \subsection{OpenStack Swift}
+    Currently there is support for event pubslishing in OpenStack Swift. For example there is no way to detect changes in a given container except listing its content and comparing timestamps.
+
+    To partialy solve this problem, OpenStack Swift created specification of middleware that would send out notifications to users if new object was created, metadata updated or or data has been deleted.
+    There were two proposed solutions, both lacking common interface for event pubslishing (no support for either Amazon S3 or CloudEvents), which were not accepted and are outdated.
+
+    \subsection{MinIO}
+    MinIO supports event publishing in form of Bucket notifications. It can inform user when a object is created, updated or deleted. MinIO offers various notification targets (i.e. MySql, Redis, Elasticsearch) but does not offer Beanstalkd as notification target.
+
+    MinIO provides only event pubslhing for buckets. There is no support for any events in account level (i.e. creating a new bucket, updating buckets metadata).
+
+    Minio is open-source object storage but does not provide custom middlewares. Since MinIO is implemented is Go programming language, any custom changes (tweaks) in MinIO source code means that whole project needs to be compiled, which can result in uncompatibility in futures versions of MinIO.
+
 \section{Middleware for OpenStack Swift and OpenIO SDS}
+    The goal is to create common middleware that is capable of runing within OpenStack Swift aswell as OpenIO SDS. The middleware will allow user to configure: which types of events will be published and destionation where given events will be published.
+
+    \subsection{Location}
+    For OpenIO SDS ideal place to run new middleware is inside pipeline of event-agent. The main reasons is that event-agent has access to every event that occurs in OpenIO SDS and process jobs in asynchronous mode, which means it will not have impact on latency of clients requests.
+
+    Most of middlewares within OpenStack Swift are placed in Proxy server, since they can react to every client request. Therefore, new proposed middleware will be placed inside proxy server pipeline.
+
+    \subsection{Design}
+    Middleware heavily utilizes containers/buckets and accounts metadata. Information about which event should be pubslished and where, will be stored stored in metadata of upper level. For publishing events regarding objects, configuration will be stored in a container/bucket metadata (for container/bucket events configuration will be stored in account level).
+
+    Compared to Amazon S3 Notifications, EventNotification middleware will be capable of publishing events regarding containers/buckets. Futhermore, EventNotification middleware will be able to publish events regarding reading content from object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in bucket.
+
+    EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. In use case where could be a lot of reads from object storage, and publishing those events cound have big impact on object storage performance. Therefore such event types can be disabled for whole object storage.
+
+    \paragraph{Event Notification configuration}
+
+    \paragraph{Structure of published event}
+
+
+    Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configration for publishing objects in given container. Therefore first step is to parse and validate such metadata. If the event notification configuration is not valid, then it is removed from metadata.
+
+    Next step is deciding if event should be published. Since metadata about event publishing are stored in upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, EventNotification middleware checks if event satisfies rule in configuration retrieved from account metadata. If yes, then event will be published to specified destination in account metadata.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=0.8\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
+        \caption{Acitiviy diagram of EventNotification middleware.}
+        \label{fig:middlewareActivity}
+    \end{figure}
+
+
+
 \section{Adapter for MinIO}
 \chapter{Implementation, experiments and assessment}
 
