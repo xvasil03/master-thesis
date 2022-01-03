@@ -619,14 +619,15 @@ def filter_factory(global_conf, **local_conf):
     \end{figure}
 
     \subsection{Structure of published event}
-    EventNotification describes published event using CloudEvents specification. For OpenIO SDS application can create events data using event-agent service and have compatible structure with events published directly from event-agent service.
+    EventNotification can publish event notification in Amazon S3 like structure and in structure following CloudEvents standard. Listing \ref{lst:eventStructureCE} and \ref{lst:eventStructureS3} describes event notification structure in JSON format.
 
     \lstset{
         string=[s]{"}{"},
         stringstyle=\color{darkpastelred},
         comment=[l]{:},
         commentstyle=\color{black},
-        caption=Data structure of event published by EventNotification middleware.
+        caption=CloudEvents structure of event notification published by EventNotification middleware.,
+        label=lst:eventStructureCE
     }
 
     \begin{lstlisting}
@@ -638,12 +639,80 @@ def filter_factory(global_conf, **local_conf):
         "id" : "request id",
         "time" : "the time, in ISO-8601 format when event occured",
         "datacontenttype" : "application/json",
-        "data" : "request data in json format"
+        "data": {
+            "userid": "id of user that created event",
+            "useripaddress": "ip addres of user that created event",
+            "requestid": "request id",
+            "transactionid": "transaction id",
+            "configurationid": "id configuration that trigged notification",
+            "resource": {
+                "name": "name of resource that triggered event (name of object, container or account)",
+                "hash": "hash value / internal id of resource",
+                "metadata": "user metadata"
+            }
+        }
+    }
+    \end{lstlisting}
+
+
+    \lstset{
+        string=[s]{"}{"},
+        stringstyle=\color{darkpastelred},
+        comment=[l]{:},
+        commentstyle=\color{black},
+        caption=Amazon S3 structure of event notification published by EventNotification middleware.,
+        label=lst:eventStructureS3
+    }
+    \begin{lstlisting}
+    {
+       "Records":[
+          {
+             "eventVersion":"2.2",
+             "eventSource":"aws:s3",
+             "eventTime":"The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request",
+             "eventName":"event-type",
+             "userIdentity":{
+                "principalId":"if od user who caused the event"
+             },
+             "requestParameters":{
+                "sourceIPAddress":"ip address where request came from"
+             },
+             "responseElements":{
+                "x-amz-request-id":"request ID"
+             },
+             "s3":{
+                "s3SchemaVersion":"1.0",
+                "configurationId":"ID found in the bucket notification configuration",
+                "bucket":{
+                   "name":"bucket-name",
+                   "ownerIdentity":{
+                      "principalId":"if od bucket owner"
+                   },
+                   "arn":"bucket-ARN in format arn:aws:s3:::<bucket-name>"
+                },
+                "object":{
+                   "key":"object key/name",
+                   "size":"object-size in bytes",
+                   "eTag":"object eTag/hash",
+                   "versionId":"object version if bucket is versioning-enabled, otherwise null",
+                   "sequencer": "a string representation of a hexadecimal value used to determine event sequence, only used with PUTs and DELETEs"
+                }
+             }
+          }
+       ]
     }
     \end{lstlisting}
 
     \subsection{Event Notification configuration}
-    Listing \ref{eventConfiguration} describes event notification configuration. Destination value
+    User can store event notification configuration using metadata with key \textbf{EventNotificationConfiguration} where value is configuration.
+    EvenNotifcation middleware offers Amazon S3 like structure for configuring event notifications.
+    Listing \ref{lst:eventConfiguration} describes event notification configuration.
+
+    \textbf{<Target>} represent targeted destination where event notifications will be sent (e.g. Beanstalkd, Elasticsearch).
+
+    \textbf{<FilterKey>} is unique name of filter containing rules that must be satified in order to publish events.
+
+    Event types are described in pseudo Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Deleted, Accessed}. Method represent REST API method preformed by user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
 
     \lstset{
         string=[s]{"}{"},
@@ -655,16 +724,28 @@ def filter_factory(global_conf, **local_conf):
     }
     \begin{lstlisting}
     {
-        "destionation": {
-            "events": "A collection of events for which to send notifications",
-            "filters" "list of key-value pairs defineing critial that must be satisfied in order to publish event"
+      "<Target>Configrations": [
+        {
+          "Id": "configration id",
+          "TargetParams": "set of key-value pairs, used specify dynamic parameters of targeted destination (e.g. name of beanstalkd tube or name of index in Elasticsearch)",
+          "Events": "array of event types that will be published",
+          "StructureType": "type of event notification structure: S3 or CloudEvents (default value S3)",
+          "Filter": {
+            "<FilterKey>": {
+              "FilterRules": [
+                {
+                  "Name": "filter operations (i.e. prefix, sufix, size)",
+                  "Value": "filter value"
+                }
+                ...
+              ]
+            }
+          }
         }
+        ...
+      ]
     }
     \end{lstlisting}
-
-    Event types are described in pseudo Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Deleted, Read}. Method represent REST API method preformed by user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
-
-
 
 
 \section{Adapter for MinIO}
