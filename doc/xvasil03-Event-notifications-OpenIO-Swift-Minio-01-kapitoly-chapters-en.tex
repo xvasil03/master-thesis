@@ -533,8 +533,43 @@ def filter_factory(global_conf, **local_conf):
 
 
 \chapter{MinIO}
+    This chapter itroduces MinIO object storage, describes its keys features, most important components and event notifications in MinIO.
+
+\section{Introduction}
+    MinIO is a software-defined object storage that provides high performance and scalability. MinIO was designed to be the standard in private/hybrid cloud object storage.
+    It runs of industry standard hardware and is 100\% open source\cite{minioObjectStorage}.
+
+    MinIO software-defined object storage suite consists of a MinIO server and optional components.
+
+    \paragraph{MinIO Server} - MinIO Server is distributed object storage server.
+    \paragraph{MinIO Client} - Service provoding familiar UNIX commands like \textit{ls, cat, cp, diff} in MinIO storage.
+    \paragraph{MinIO Console} - Browser-based GUI offering all commands from MinIO Client in a design that feels more intuitive for DevOps and IT admins.
+    \paragraph{MinIO Kubernetes Operator} - plugin allowing easy deployment and operation of MinIO object storage on Kubernetes.
+
+\section{Key features}
+    MinIO was designed to multiple benefits to object storage:
+
+    \subsection*{Ease of use}
+    MinIO can be install simply by downloading single binary file and executing it. Configuration setup has been kept to a bare minimum. Upgrading to newer version is done with single command, which is non-distruptive and does not provoke any downtime\cite{minioIntel}.
+
+    \subsection*{Encryption and WORM}
+    MinIO provides per-object encryption using unique object key which is protected by a master key managed key-management-system (KMS).
+
+    MinIO support object locking by enforcing Write-Once-Read-Many(WORM) immutability until lock is expired or lifted. This mode prevent tempering with data once written\cite{minioHighPerformance}.
+
+    \subsection*{Metadata architecture}
+    MinIO does not provide separate storage for metadata. All operations are preformed on object-level granualarity. This approach isolates any failures and does not allow any spilover to larger system failures\cite{minioIntel}.
+
+    \subsection*{High availability}
+    MinIO design allows server to lose up to half its drivers and a cluster to lose up to half its servers and MinIO will still be able to successfully process requests and serve objects. This is achieved by erasure code that protects data with redundancy\cite{minioIntel}.
+
+\section{Event notifications}
+    MinIO support event notification for event occuring to objects. MinIO provides Amazon S3 like events structure and API for defineing which events will be published. To set event configuration, users can use MinIO client or provided MinIO SDK API.
+
+    Supported event notification targets are: AMQP, Redis, MySQ, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks and NSQ.
 
 \chapter{Solution draft}
+    This chapter describes current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in form of middleware.
 \section{Current state}
     \subsection{OpenIO SDS}
     OpenIO Software-Defined storage has event-driven acrhitecture, capable of publishing events to Beanstalkd using \textit{event-agent service} and \textit{Notify filter}.
@@ -572,11 +607,6 @@ def filter_factory(global_conf, **local_conf):
 
     EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. In use case where could be a lot of reads from object storage, and publishing those events cound have big impact on object storage performance. Therefore such event types can be disabled for whole object storage.
 
-    \paragraph{Event Notification configuration}
-
-    \paragraph{Structure of published event}
-
-
     Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configration for publishing objects in given container. Therefore first step is to parse and validate such metadata. If the event notification configuration is not valid, then it is removed from metadata.
 
     Next step is deciding if event should be published. Since metadata about event publishing are stored in upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, EventNotification middleware checks if event satisfies rule in configuration retrieved from account metadata. If yes, then event will be published to specified destination in account metadata.
@@ -587,6 +617,53 @@ def filter_factory(global_conf, **local_conf):
         \caption{Acitiviy diagram of EventNotification middleware.}
         \label{fig:middlewareActivity}
     \end{figure}
+
+    \subsection{Structure of published event}
+    EventNotification describes published event using CloudEvents specification. For OpenIO SDS application can create events data using event-agent service and have compatible structure with events published directly from event-agent service.
+
+    \lstset{
+        string=[s]{"}{"},
+        stringstyle=\color{darkpastelred},
+        comment=[l]{:},
+        commentstyle=\color{black},
+        caption=Data structure of event published by EventNotification middleware.
+    }
+
+    \begin{lstlisting}
+    {
+        "specversion" : "1.0",
+        "type" : "event type",
+        "objectstorage" : "name of object storage (swift, openiosds)",
+        "source" : "URI-reference where an event occured",
+        "id" : "request id",
+        "time" : "the time, in ISO-8601 format when event occured",
+        "datacontenttype" : "application/json",
+        "data" : "request data in json format"
+    }
+    \end{lstlisting}
+
+    \subsection{Event Notification configuration}
+    Listing \ref{eventConfiguration} describes event notification configuration. Destination value
+
+    \lstset{
+        string=[s]{"}{"},
+        stringstyle=\color{darkpastelred},
+        comment=[l]{:},
+        commentstyle=\color{black},
+        caption=Strucute of event notification configuration
+        label=lst:eventConfiguration
+    }
+    \begin{lstlisting}
+    {
+        "destionation": {
+            "events": "A collection of events for which to send notifications",
+            "filters" "list of key-value pairs defineing critial that must be satisfied in order to publish event"
+        }
+    }
+    \end{lstlisting}
+
+    Event types are described in pseudo Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Deleted, Read}. Method represent REST API method preformed by user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
+
 
 
 
