@@ -2,6 +2,46 @@
 %=========================================================================
 % Authors: Michal Bidlo, Bohuslav Křena, Jaroslav Dytrych, Petr Veigend and Adam Herout 2019
 
+\definecolor{darkpastelred}{rgb}{0.76, 0.23, 0.13}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstset{
+    string=[s]{"}{"},
+    stringstyle=\color{darkpastelred},
+    comment=[l]{:},
+    commentstyle=\color{black},
+    caption=Example of event described using CloudEvents specification and JSON
+}
+
+
+\lstdefinestyle{jsonStyle}{
+    string=[s]{"}{"},
+    stringstyle=\color{darkpastelred},
+    comment=[l]{:},
+    breaklines=true,
+    commentstyle=\color{black}
+}
+
+\lstdefinestyle{pythonStyle}{
+    backgroundcolor=\color{backcolour},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{blue},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,
+    breaklines=true,
+    captionpos=b,
+    keepspaces=true,
+    numbers=left,
+    showspaces=false,
+    showstringspaces=false,
+    showtabs=false,
+    tabsize=2
+}
+
 \hyphenation{OpenStack Swift OpenIO SDS}
 
 \chapter{Introduction}
@@ -12,25 +52,25 @@
 %- about object storage
 %- users interest of what's going in theirs storage / event activities
 %- TODO: maybe remove talk about types of cloud storages? solution: talk about need for monitoring and users need to monitor/receive information regarding their storage
-In the current world, cloud computing became the most popular way of delivering different types of services throught Internet. One of the most popular cloud service is cloud storage, which allows users to store data in remote locations mentained by third party. Based on how cloud storage manages data, cloud storage can be divided into 3 types: Block storage, File storage and Object storage. Object storage manages data as objects, each object typically includes data itself and some additional informations stored in objects metadata. Since data are stored in remote locations, to which users don't have direct and complete access, some users or external services might want to receive informations about certain events (for example change of content) in storages where their data are located.
+In the current world, cloud computing has become the most popular way of delivering different services on the Internet. One of the most popular cloud services is cloud storage, allowing users to store data in remote locations maintained by a third party. Based on how cloud storage manages data, cloud storage can be divided into three types: Block storage, File storage and Object storage. Object storage manages data as objects, and each object typically includes data itself and some additional information stored in objects metadata. Since data are stored in remote locations, to which users do not have direct and complete access, some users or external services might want to receive information about specific events (for example, change of content) in storages where their data are located.
 
 % importance of thesis in this field
 %- react to events - possibly react to 'bad' events
-%- allows users to have better picture what is going on in their storage
-Importance of this thesis is to provide event informations to users in OpenIO SDS and OpenStack Swift, which will allow user to react on those events and possibly prevent/detect unwanted actions. Providing event notifications will allow users to have better picture on what is going on in their storage and impove monitoring in these object storages.
+%- allows users to have a better picture of what is going on in their storage
+The importance of this thesis is to provide event information to users in OpenIO SDS and OpenStack Swift, which will allow users to react to those events, create more sophisticated backend operations and postprocessing, or possibly prevent/detect unwanted actions. In addition, providing event notifications will allow users to have a better picture of what is going on in their storage and improve monitoring in these object storages.
 
 %past advances in this field
-There was two attempts\cite{swiftPatch1}\cite{swiftPatch2} to solve this issue within OpenStack Swift which were not officially accepted and their solution is outdated. Currently there is no official solution for publishing event notification in OpenStack Swift nor OpenIO Software-Defined Storage (hereinafter SDS).
+There were two attempts\cite{swiftPatch1}\cite{swiftPatch2} to solve this issue within OpenStack Swift which were not officially accepted, and their solution is outdated. So currently, there is no official solution for publishing event notification in OpenStack Swift nor OpenIO Software-Defined Storage (from now on SDS).
 
 %why am I interested in this, why I choose this topic
 %- perosnally i used object storage
 %- can se myself using this solution in future as well as millions of other users
 %- impact on big amount of users
 %- contibuting to open source projects
-My interest in this topic steems from its possible impact to extensive amount of users that OpenStack Swift and OpenIO have. Contibuting to open source projects is something that I always wanted to be part of. Possiblity to improve user experience in OpenStack Swift and OpenIO SDS and allow those storages to be even more competative against comercial storages (Amazon, Google, ...) is another reason why I choose this topic.
+My interest in this topic stems from its possible impact on the extensive amount of users that OpenStack Swift and OpenIO have. Furthermore, I have always wanted to contribute to open-source projects. The possibility to improve user experience in OpenStack Swift and OpenIO SDS and allow these storages to be even more competitive against commercial storages (Amazon, Google, ...) is another reason why I choose this topic.
 
 %goals of thesis
-The goal of this thesis is to create program/middleware which wil publish event notification to user specified destination. One of supported destination will be Beanstalk queue, but program will allow to easily add other types of destinations (for example Kafka) using predefined interface. Proposed program will allow user to specify, using objects metadata (such as name prefix/sufix and object size) and type of event, which event notification should be published. Program will be able to run within OpenStack Swift as well as OpenIO SDS. This thesis will strive to find such solution that could be officially accpeted as part of OpenStack Swift and OpenIO SDS.
+This thesis aims to create a program/middleware which will publish event notifications to user-specified destinations. One of the supported destinations will be the Beanstalk queue, but the program can be easily configured to support other destinations (for example, Kafka) using a predefined interface. The proposed program will allow users to specify, using objects metadata (such as name prefix/suffix and object size) and type of event, which event notification should be published. The program will be able to run within OpenStack Swift and OpenIO SDS. This thesis will strive to find such a solution that could be officially accepted as part of OpenStack Swift and OpenIO SDS.
 
 %structure of thesis
 Structure of thesis - TODO - there will be probably change in chpaters structure
@@ -45,7 +85,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
 
     %key koncepts
     %-metadata are stored in same object store device but on separated location
-    \subsection{Key concepts}
+    \subsection*{Key concepts}
     Key concepts of object storage are\cite{ibmObjectStorage}:
     \begin{itemize}
         \item Objects - An object typically consist of user data and metadata uploaded to object storage.
@@ -60,7 +100,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     \end{itemize}
 
 
-    \subsection{Object data}
+    \subsection*{Object data}
     %types of stored informations
     With object storage techniques, each object contains\cite{ibmObjectStorage}:
     \begin{itemize}
@@ -69,7 +109,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
       \item \textbf{A universally unique identifier (UUID)} - This ID, created using a hashing process based on object name and other additional information, is assigned to each object in object storage. Using ID object storage systems can tell apart objects from one another. ID is also used to extract data in a system without knowing their physical location/drive and offset.
     \end{itemize}
 
-    \subsection{Access to object storage}
+    \subsection*{Access to object storage}
     %access to object storage
     %-resfull interface
     %-advantages of this approach
@@ -77,7 +117,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     Object storage services provide a RESTful interface \cite{cloudObjectStorage} over HTTP protocol to store and access objects. This approach allows users to create, read, delete, update, or even query objects anytime and anywhere simply by referencing UUID (or using specific attributes for querying), usually with a proper authentication process. The most popular interfaces for communicating with object storages are Amazon S3 (Simple Storage Service) API and OpenStack Swift API.
 
     %comparison to other storage models
-    \subsection{Pros and cons of object storage}
+    \subsection*{Pros and cons of object storage}
     Pros:
     \begin{itemize}
         \item Capable of handling a large amount of unstructured data
@@ -104,7 +144,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     % - Automation
     % - Masking
     % - Policy Management
-    \subsection{Principles}
+    \subsection*{Principles}
     There is no clear definition on criteria for defining software-defined storage, although several fundamental principles can be deducted\cite{sdsGPCloudStorage}:
     \begin{itemize}
         \item \textbf{Scale-out} - SDS should enable low-cost horizontal scaling (by adding new commodity hardware to existing infrastructure) compared to vertical scaling with more powerful (and expensive) hardware.
@@ -120,21 +160,20 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     %   - control plane
     %functions
     %benefits
-    \subsection{Architecture}
+    \subsection*{Architecture}
     As previously described, the main characteristic of SDS is to separate storage functions into control plane and data plane.
 
     \paragraph{Control plane}
-    - the control plane represents an abstraction layer with main goal to virtualize storage resources. It offers high-level functions that are needed by the customer to run the business workload and enable optimized, flexible, scalable, and rapid provisioning storage infrastructure capacity. These capabilities span functions like policy automation, analytics and optimization, backup and copy management, security, and integration with the API services, including other cloud provider services\cite{sdsIBMSDSGuide}.
+    the control plane is a software layer with main goal to virtualize storage resources. The control plane manages data provision, offers orchastrization of data services across object storages. Solutions that are part of control plane allow policy automation, analytics and optimization, backup and copy management, security, and integration with the API services, including other cloud provider services\cite{sdsIBMSDSGuide}.
 
     \paragraph{Data plane}
-    - the data plane encompasses the infrastructure where data is processed. It consists of all basic storage management functions, such as virtualization, RAID protection, tiering, copy services (remote, local, synchronous, asynchronous, and point-in-time), encryption, compression, and data deduplication that can be requested by the control plane. The data plane is the interface to the hardware infrastructure where the data is stored. It provides a complete range of data access possibilities and spans traditional access methods, such as block I/O (for example, iSCSI), File I/O (NFS, SMB, or Hadoop Distributed File System (HFDS)), and object-storage\cite{sdsIBMSDSGuide}.
+    - the data plane encompasses the infrastructure where data is processed. The data plane provides inteface to the hardware infrastructure and defines how the storage is accessed. It provides access methods to storage, such as block I/O (for example, iSCSI), File I/O (NFS, SMB, or Hadoop Distributed File System (HFDS)), and object-storage. It defines storage managmenet functions, such as fitualization, RAID protection, tiering, encryption, compression, and data deduplication that can be requested by the control plane\cite{sdsIBMSDSGuide}.
 
-    %todo image of layers from sdsSurvey
     \begin{figure}[hbt]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/sds-planes.eps}
         \caption{SDS data and control plane.\cite{sdsPlanes}, remade}
-        \label{fig:beanstalkdJobSM}
+        \label{fig:sdsPlanes}
     \end{figure}
 
 \section{Beanstalk queue}
@@ -217,16 +256,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
         \item extension attributes - custom attibutes allowing external systems to attach metadata to an event.
     \end{itemize}
 
-    \definecolor{darkpastelred}{rgb}{0.76, 0.23, 0.13}
-    \lstset{
-        string=[s]{"}{"},
-        stringstyle=\color{darkpastelred},
-        comment=[l]{:},
-        commentstyle=\color{black},
-        caption=Example of event described using CloudEvents specification and JSON
-    }
-
-    \begin{lstlisting}
+    \begin{lstlisting}[style=jsonStyle, caption=Example of event described using CloudEvents specification and JSON]
     {
         "specversion" : "1.0",
         "type" : "com.github.pull_request.opened",
@@ -254,10 +284,11 @@ This chapter introduces Object storage, its core concepts, and the underlying te
         \item Amazon EventBridge - serverless event bus service used to receive events from AWS. It allows users to define rules to match events and deliver them to defined targets.
     \end{itemize}
 
-    By this date, Amazon S3 does not support CloudEvents specification and describes event data in its own way. Some of event types that Amazon S3 can publish are\cite{eventS3EventNotificationDest}:
+    By this date, Amazon S3 does not support CloudEvents specification and describes event data in its own way. Some of event types that Amazon S3 can publish are displayed in table \ref{tab:eventTypesS3}.
 
 
      \renewcommand*{\arraystretch}{1.4}
+     \begin{table}
      \begin{tabularx}{\textwidth}{|p{0.3\textwidth}|X|}
          \hline
          \textbf{Event type} & \textbf{Desription} \\
@@ -285,9 +316,13 @@ This chapter introduces Object storage, its core concepts, and the underlying te
          DeleteMarkerCreated & An versioned object was marked for deletion. \\
          \hline
     \end{tabularx}
+    \caption{Subset of Amazon S3 Event Types \cite{eventS3EventNotificationDest}\label{tab:eventTypesS3}}
+    \end{table}
 
 
 \chapter{OpenIO SDS}
+    This chapter introduces OpenIO Software-defined storage, its key features, its data organization along with the underlying technologies. Futhermore, this chapter introduces Grid For Apps framework (\ref{sec:oioGridForApps}) and event publishing in OpenIO (\ref{sec:oioEvent-Agent}).
+
     OpenIO Software-defined storage is open source object storage that is perfectly capable of traditional use cases (such as archiving, big data, cloud). However, at the same time, combined with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create an application that needs much more sophisticated back-end operations. These applications include industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. In addition, OpenIO SDS is event-driven storage with the ability to intercept events seamlessly and transparently to the rest of the stack.
 
     \section{Key characteristics}
@@ -310,6 +345,10 @@ This chapter introduces Object storage, its core concepts, and the underlying te
     \subsection*{Tiering}
     With tiering, OpenIO SDS offers users to configure a pool containing a group of hardware that can then be used to store specific types of objects. For example, users can create a pool of high-performance hard disks (e.g. SSDs) and use the pool to store objects that require low latency.
     This feature is realized by a mechanism called storage policies. Multiple storage policies can be defined in one particular namespace. Storage policies can also be used for specifying how many replicas should be created for a specific dataset\cite{oioCoreSolution}.
+
+    \subsection*{ConsciousGrid}
+    ConsciousGrid is a OpenIO technology that uses real-time metrics from the nodes(CPU, I/O, capacity) automatically discover and place data on the most appropriate place. It provides load balancing and computes score for each node and then provides weighted random selection\cite{oioSdsServices}.
+
 
     \section{Data organization}
     Multi-tenancy is one of the core concepts in OpenIO SDS. Data objects are stored within following hierarchy: Namespace/Account/Container/Object \ref{fig:oioDataOrganization}. Multiple namespaces can be configured in each cluster, providing multi-region/zone logical layouts for applications and segregated workloads depending on a tenant or geo-distribution need\cite{oioSdsConcepts}.
@@ -338,18 +377,18 @@ This chapter introduces Object storage, its core concepts, and the underlying te
 
     %\section{Services} maybe include?
     \section{Serverless computing}
-    %todo what is serverless computing
+    OpenIO offers Serverless computing in object storage cluster nodes using framework Grid For Apps.
     \subsection{Grid For Apps}\label{sec:oioGridForApps}
 
     Like Amazon AWS Lambda, OpenIO offers an event-driven compute service called Grid for Apps that works on top of OpenIO.
 
-    Grif for Apps intercepts all the events that happen in the storage layer, and based on user configuration, triggers specific applications or scripts to act on data (metadata) stored in object storage\cite{oioNextGen}. The application is executed in cluster nodes and utilizes free unused resources available in the cluster. This improves efficiency (fewer data moving since object data are already available) and saves money (no need for external resources)\cite{oioNextGen}.
+    Grid for Apps intercepts all the events that happen in the storage layer, and based on user configuration, triggers specific applications or scripts to act on data (metadata) stored in object storage\cite{oioNextGen}. The application is executed in cluster nodes and utilizes free unused resources available in the cluster. This improves efficiency (fewer data moving since object data are already available) and saves money (no need for external resources)\cite{oioNextGen}.
 
     Grid for Apps allows customers to perform operations such as metadata enrichment, data indexing and search (e.g. indexing metadata to Elasticsearch), pattern recognition, machine learning, data filtering, monitoring, etc\cite{oioNextGen}.
 
     Grid for Apps in OpenIO is realized using service event-agent and beanstalkd queue.
 
-    \subsection{Event-agent}
+    \subsection{Event-agent}\label{sec:oioEvent-Agent}
     Event-agent is an OpenIO service responsible for handling asynchronous jobs. It relies on beanstalkd backend to manage jobs. Event-agent key characteristics are\cite{oioSdsServices}:
     \begin{itemize}
         \item Stateless
@@ -452,7 +491,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
         \centering
         \includegraphics[width=0.75\textwidth]{obrazky-figures/swift-servers.eps}
         \caption{OpenStack Swift servers architecture.}
-        \label{fig:beanstalkdJobSM}
+        \label{fig:swiftServers}
     \end{figure}
 
     \section{Middlewares}
@@ -463,6 +502,25 @@ This chapter introduces Object storage, its core concepts, and the underlying te
 
     Some of the middlewares are required and will be automatically inserted by swift code\cite{swiftMiddleware}.
 
+    \lstset{
+        caption=Example of proxy server configuration (proxy-server.conf),
+        label=lst:swiftMiddleware
+    }
+    \begin{lstlisting}
+    [DEFAULT]
+    log_level = DEBUG
+    user = <your-user-name>
+
+    [pipeline:main]
+    pipeline = webhook proxy-server
+
+    [filter:webhook]
+    use = egg:swift#webhook
+
+    [app:proxy-server]
+    use = egg:swift#proxy
+    \end{lstlisting}
+
     \subsection{Interface}
     OpenStack Swift servers are implemented using Python WSGI applications. Therefore only Python WSGI middlewares are accepted in OpenStack Swift.
 
@@ -470,34 +528,7 @@ This chapter introduces Object storage, its core concepts, and the underlying te
 
     Method filter\_factory is used by Python Paste framework to instantiate middleware.
 
-    \definecolor{codegreen}{rgb}{0,0.6,0}
-    \definecolor{codegray}{rgb}{0.5,0.5,0.5}
-    \definecolor{codepurple}{rgb}{0.58,0,0.82}
-    \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
-
-\lstdefinestyle{mystyle}{
-    backgroundcolor=\color{backcolour},
-    commentstyle=\color{codegreen},
-    keywordstyle=\color{blue},
-    numberstyle=\tiny\color{codegray},
-    stringstyle=\color{codepurple},
-    basicstyle=\ttfamily\footnotesize,
-    breakatwhitespace=false,
-    breaklines=true,
-    captionpos=b,
-    keepspaces=true,
-    numbers=left,
-    showspaces=false,
-    showstringspaces=false,
-    showtabs=false,
-    tabsize=2,
-    caption=Example of healthcheck middleware in OpenStack Swift,
-    label=lst:swift-healthcheck
-}
-
-\lstset{style=mystyle}
-
-\begin{lstlisting}[language=Python]
+\begin{lstlisting}[language=Python, style=pythonStyle, caption=Example of healthcheck middleware in OpenStack Swift, label=lst:swift-healthcheck]
 import os
 from swift.common.swob import Request, Response
 
@@ -568,8 +599,11 @@ def filter_factory(global_conf, **local_conf):
 
     Supported event notification targets are: AMQP, Redis, MySQ, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks and NSQ.
 
+    Beside events occred on objects such as \textbf{s3:ObjectCreated:*} and \textbf{s3:ObjectRemoved:*}, MinIO offers event notification for access to storage \textbf{s3:ObjectAccessed:*} and event notification when bucket is created \textbf{s3:BucketCreated} and deleted \textbf{s3:BucketRemoved}.
+
+
 \chapter{Solution draft}
-    This chapter describes current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in form of middleware.
+    This chapter describes current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in form of middleware, and for publishing events notification from MinIO to Beanstalkd in form of adapter.
 \section{Current state}
     \subsection{OpenIO SDS}
     OpenIO Software-Defined storage has event-driven acrhitecture, capable of publishing events to Beanstalkd using \textit{event-agent service} and \textit{Notify filter}.
@@ -577,7 +611,7 @@ def filter_factory(global_conf, **local_conf):
 
     Second disadvantage is \textbf{lack of event filters}. Tenants might be interested in events involving specific objects or buckets that satisfy specific rules (for example object prefix, size, etc).
 
-    Third disadvantage is that events are published only to beanstalkd queue. OpenIO SDS does not support any other destinations for event pubslishing. Since events can be used for monotoring, there should be proper interface, allowing users to define destionation for even pubslishing (i.e. Kafka, Prometheus, Grafana).
+    Third disadvantage is that events are published only to beanstalkd queue. OpenIO SDS does not support any other destinations for event pubslishing. Since events can be used for monotoring, there should be proper interface, allowing users to define destionation to which event will be published (i.e. Kafka, Prometheus, MySQL).
 
     \subsection{OpenStack Swift}
     Currently there is support for event pubslishing in OpenStack Swift. For example there is no way to detect changes in a given container except listing its content and comparing timestamps.
@@ -586,14 +620,14 @@ def filter_factory(global_conf, **local_conf):
     There were two proposed solutions, both lacking common interface for event pubslishing (no support for either Amazon S3 or CloudEvents), which were not accepted and are outdated.
 
     \subsection{MinIO}
-    MinIO supports event publishing in form of Bucket notifications. It can inform user when a object is created, updated or deleted. MinIO offers various notification targets (i.e. MySql, Redis, Elasticsearch) but does not offer Beanstalkd as notification target.
+    MinIO supports event publishing in form of Bucket notifications. It can inform user when a object is created, updated or deleted. Beside events regarding objects, MinIO provides events notifications for replication events as well as evens regarding creating and deleting buckets. Futhermore MinIO allows users to configure which events will be published using Amazon S3 event notification structure.
 
-    MinIO provides only event pubslhing for buckets. There is no support for any events in account level (i.e. creating a new bucket, updating buckets metadata).
+    MinIO offers various notification targets (i.e. MySql, Redis, Elasticsearch) but does not offer Beanstalkd as notification target.
 
-    Minio is open-source object storage but does not provide custom middlewares. Since MinIO is implemented is Go programming language, any custom changes (tweaks) in MinIO source code means that whole project needs to be compiled, which can result in uncompatibility in futures versions of MinIO.
+    Minio is open-source object storage but does not provide custom middlewares. Since MinIO is implemented is Go programming language, any custom changes (tweaks) in MinIO source code means that whole project needs to be compiled, which can result in incompatibility in futures versions of MinIO.
 
 \section{Middleware for OpenStack Swift and OpenIO SDS}
-    The goal is to create common middleware that is capable of runing within OpenStack Swift aswell as OpenIO SDS. The middleware will allow user to configure: which types of events will be published and destionation where given events will be published.
+    The goal is to create common application/middleware capable of runing within OpenStack Swift aswell as OpenIO SDS. The middleware will allow user to configure: which types of events will be published and destionation where given events will be published. Proposed middleware will be called \textbf{EventNotification}.
 
     \subsection{Location}
     For OpenIO SDS ideal place to run new middleware is inside pipeline of event-agent. The main reasons is that event-agent has access to every event that occurs in OpenIO SDS and process jobs in asynchronous mode, which means it will not have impact on latency of clients requests.
@@ -603,13 +637,13 @@ def filter_factory(global_conf, **local_conf):
     \subsection{Design}
     Middleware heavily utilizes containers/buckets and accounts metadata. Information about which event should be pubslished and where, will be stored stored in metadata of upper level. For publishing events regarding objects, configuration will be stored in a container/bucket metadata (for container/bucket events configuration will be stored in account level).
 
-    Compared to Amazon S3 Notifications, EventNotification middleware will be capable of publishing events regarding containers/buckets. Futhermore, EventNotification middleware will be able to publish events regarding reading content from object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in bucket.
+    Compared to Amazon S3 Notifications, EventNotification middleware will be capable of publishing events regarding containers/buckets. Futhermore, EventNotification middleware will be able to publish events regarding access to object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in bucket.
 
-    EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. In use case where could be a lot of reads from object storage, and publishing those events cound have big impact on object storage performance. Therefore such event types can be disabled for whole object storage.
+    EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. This option could be particularly useful when there is a lot of read from a object storage, and publishing those events cound have big impact on object storage performance. Therefore such event types can be disabled for whole object storage.
 
-    Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configration for publishing objects in given container. Therefore first step is to parse and validate such metadata. If the event notification configuration is not valid, then it is removed from metadata.
+    Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configration for publishing objects in given container. Therefore first step is to parse and validate such metadata. If the event notification configuration is not valid, then such configuration will be removed from metadata.
 
-    Next step is deciding if event should be published. Since metadata about event publishing are stored in upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, EventNotification middleware checks if event satisfies rule in configuration retrieved from account metadata. If yes, then event will be published to specified destination in account metadata.
+    Next step is deciding if event should be published. Since metadata about event publishing are stored in upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, EventNotification middleware checks if event satisfies rule in configuration retrieved from account metadata. If yes, then event will be published to specified destination in account metadata. Similar process if done for events involving objects, except objects do not carry informations about event publishing and configration is stored in a proper containers metadata.
 
     \begin{figure}[hbt]
         \centering
@@ -621,16 +655,7 @@ def filter_factory(global_conf, **local_conf):
     \subsection{Structure of published event}
     EventNotification can publish event notification in Amazon S3 like structure and in structure following CloudEvents standard. Listing \ref{lst:eventStructureCE} and \ref{lst:eventStructureS3} describes event notification structure in JSON format.
 
-    \lstset{
-        string=[s]{"}{"},
-        stringstyle=\color{darkpastelred},
-        comment=[l]{:},
-        commentstyle=\color{black},
-        caption=CloudEvents structure of event notification published by EventNotification middleware.,
-        label=lst:eventStructureCE
-    }
-
-    \begin{lstlisting}
+    \begin{lstlisting}[style=jsonStyle, caption=CloudEvents structure of event notification published by EventNotification middleware., label=lst:eventStructureCE]
     {
         "specversion" : "1.0",
         "type" : "event type",
@@ -654,22 +679,13 @@ def filter_factory(global_conf, **local_conf):
     }
     \end{lstlisting}
 
-
-    \lstset{
-        string=[s]{"}{"},
-        stringstyle=\color{darkpastelred},
-        comment=[l]{:},
-        commentstyle=\color{black},
-        caption=Amazon S3 structure of event notification published by EventNotification middleware.,
-        label=lst:eventStructureS3
-    }
-    \begin{lstlisting}
+    \begin{lstlisting}[style=jsonStyle, caption=Amazon S3 structure of event notification published by EventNotification middleware., label=lst:eventStructureS3]
     {
        "Records":[
           {
              "eventVersion":"2.2",
              "eventSource":"aws:s3",
-             "eventTime":"The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when Amazon S3 finished processing the request",
+             "eventTime":"The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when a object storage finished processing the request",
              "eventName":"event-type",
              "userIdentity":{
                 "principalId":"if od user who caused the event"
@@ -712,17 +728,17 @@ def filter_factory(global_conf, **local_conf):
 
     \textbf{<FilterKey>} is unique name of filter containing rules that must be satified in order to publish events.
 
-    Event types are described in pseudo Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Deleted, Accessed}. Method represent REST API method preformed by user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
+    Event types are described in pseudo Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Removed, Accessed}. Method represent REST API method preformed by user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
 
     \lstset{
         string=[s]{"}{"},
         stringstyle=\color{darkpastelred},
         comment=[l]{:},
         commentstyle=\color{black},
-        caption=Strucute of event notification configuration
+        caption=Strucute of event notification configuration,
         label=lst:eventConfiguration
     }
-    \begin{lstlisting}
+    \begin{lstlisting}[style=jsonStyle, caption=Strucute of event notification configuration,    label=lst:eventConfiguration]
     {
       "<Target>Configrations": [
         {
