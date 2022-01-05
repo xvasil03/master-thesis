@@ -44,7 +44,7 @@
 
 \hyphenation{OpenStack Swift OpenIO SDS}
 
-\chapter{Introduction}
+\chapter{Introduction}\label{chap:introduction}
 
 % general introduction for a topic:
 %- cloud computing popularity
@@ -73,9 +73,13 @@ My interest in this topic stems from its possible impact on the extensive amount
 This thesis aims to create a program/middleware which will publish event notifications to user-specified destinations. One of the supported destinations will be the Beanstalk queue, but the program can be easily configured to support other destinations (for example, Kafka) using a predefined interface. The proposed program will allow users to specify, using objects metadata (such as name prefix/suffix and object size) and type of event, which event notification should be published. The program will be able to run within OpenStack Swift and OpenIO SDS. This thesis will strive to find such a solution that could be officially accepted as part of OpenStack Swift and OpenIO SDS.
 
 %structure of thesis
-Structure of thesis - TODO - there will be probably change in chpaters structure
+This work consists of six chapters. Chapter \ref{chap:introduction} introduces the motivation, objectives, and proposed solutions of this work. Chapter \ref{chap:background} briefly describes technologies and general areas that this work relates to. Chapter \ref{chap:openiosds} covers OpenIO SDS, describes its data organization and key services providing events. Chapter \ref{chap:swift} introduces OpenStack object storage Swift, its data model, server processes and describes middlewares within OpenStack Swift. Chapter \ref{chap:minio} briefly covers MinIO storage and the way it publishes event notifications. Chapter \ref{chap:solution} describes the current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO, and proposes a solution for publishing event notifications in OpenIO SDS and OpenStack, and a solution for publishing event notifications from MinIO to Beanstalk queue.
 
-\chapter{Background}
+Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with the first point of the assingment, while chapter \ref{chap:solution} deals with the second point of assigment.
+
+
+
+\chapter{Background}\label{chap:background}
 
     This chapter introduces Object storage, its core concepts, and the underlying technologies. After introducing the Object storage, for sufficient understanding of this master thesis topic, it is essential to explain how Software-defined storage manages data and what types of events can occur inside. The last part of this chapter describes the concept of event notifications, why they are essential, and current interfaces for publishing them to users.
 
@@ -320,7 +324,7 @@ Structure of thesis - TODO - there will be probably change in chpaters structure
     \end{table}
 
 
-\chapter{OpenIO SDS}
+\chapter{OpenIO SDS}\label{chap:openiosds}
     This chapter introduces OpenIO Software-defined storage, its key features, its data organization along with the underlying technologies. Furthermore, this chapter introduces Grid For Apps framework (\ref{sec:oioGridForApps}) and event publishing in OpenIO (\ref{sec:oioEvent-Agent}).
 
     OpenIO Software-defined storage is open source object storage that is perfectly capable of traditional use cases (such as archiving, big data, cloud). However, at the same time, combined with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create an application that needs much more sophisticated back-end operations. These applications include industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. In addition, OpenIO SDS is event-driven storage with the ability to intercept events seamlessly and transparently to the rest of the stack.
@@ -426,7 +430,7 @@ Structure of thesis - TODO - there will be probably change in chpaters structure
 
     OpenIO offers users to process events outside of the event-agent. In order to do that, users can use the application "notify" which will send an event to a specified beanstalkd tube. Then a user can create a custom consumer process that will execute the job from beanstalkd tube. An example of such configuration is displayed in listing \ref{lst:event-agent-handlers}.
 
-\chapter{OpenStack Swift}
+\chapter{OpenStack Swift}\label{chap:swift}
     This chapter introduces OpenStack object storage (code name Swift) and describes its key features. Furthermore, this chapter elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
 
     OpenStack Swift is open-source object storage developed by Rackspace, a company that, together with NASA, created the OpenStack project. After becoming an open-source project, Swift became the leading open-source object storage supported and developed by many famous IT companies, such as Red Hat, HP, Intel, IBM, and others.
@@ -562,7 +566,7 @@ def filter_factory(global_conf, **local_conf):
         \item \textbf{Object Transient-Sysmeta} - System metadata takes the form of \textbf{X-Object-Transient-Sysmeta-<key>: <value>}. Transient-sysmeta has a similar behavior as system metadata and can be accessed only within Swift, and headers containing Transient-sysmeta are dropped. If middleware wants to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
     \end{itemize}
 
-\chapter{MinIO}
+\chapter{MinIO}\label{chap:minio}
 This chapter introduces MinIO object storage, describes its key features, most essential components, and event notifications in MinIO.
 
 \section{Introduction}
@@ -601,7 +605,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Beside events occred on objects such as \textbf{s3:ObjectCreated:*} and \textbf{s3:ObjectRemoved:*}, MinIO offers event notification for access to storage \textbf{s3:ObjectAccessed:*} and event notification when bucket is created \textbf{s3:BucketCreated} and deleted \textbf{s3:BucketRemoved}.
 
 
-\chapter{Solution draft}
+\chapter{Solution draft}\label{chap:solution}
     This chapter describes the current state of event notifications in OpenIO SDS, OpenStack Swift, and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in the form of middleware and for publishing events notification from MinIO to Beanstalkd in the form of an adapter.
 \section{Current state}
     \subsection{OpenIO SDS}
