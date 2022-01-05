@@ -92,11 +92,11 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \subsection*{Key concepts}
     Key concepts of object storage are\cite{ibmObjectStorage}:
     \begin{itemize}
-        \item Objects - An object typically consist of user data and metadata uploaded to object storage.
-        \item Containers/Buckets - represents logical abstraction used to provide a data container in object storage. An object with the same name in two different containers represents two different objects. This concept segregates data using bucket ownership and a combination of public and secret keys bound to object storage accounts, allowing users and applications to manipulate with authorized data for specific types of manipulation (read/write/update).
-        \item Metadata - Additional information about data, such as date of creation and last modification, size, hash.
-        \item Access Control Lists(ACLs) - used as primary security construct in object storage, stored in account or bucket level and allows owners to grant permissions for certain operations based on UUID, email, ...
-        \item Object Data protection - two primary data protection schemes in object storage are Replication and Erasure Coding.
+        \item \textbf{Objects} - An object typically consist of user data and metadata uploaded to object storage.
+        \item \textbf{Containers/Buckets} - represents logical abstraction used to provide a data container in object storage. An object with the same name in two different containers represents two different objects. This concept segregates data using bucket ownership and a combination of public and secret keys bound to object storage accounts, allowing users and applications to manipulate with authorized data for specific types of manipulation (read/write/update).
+        \item \textbf{Metadata} - Additional information about data, such as date of creation and last modification, size, hash.
+        \item \textbf{Access Control Lists(ACLs)} - used as primary security construct in object storage, stored in account or bucket level and allows owners to grant permissions for certain operations based on UUID, email, ...
+        \item \textbf{Object Data protection} - two primary data protection schemes in object storage are Replication and Erasure Coding.
 
         \textbf{Replication} is a method used to ensure data resilience. Data are copied into multiple locations/disks/partitions. In case of failure, data are used from a secondary copy to recreate the original copy or as a primary copy.
 
@@ -109,7 +109,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     With object storage techniques, each object contains\cite{ibmObjectStorage}:
     \begin{itemize}
       \item \textbf{Data} - user-specified data that needs to be stored in persistent storage. Such data can be binary data, text file, image, etc.
-      \item \textbf{Metadata} - additional data that describe objects data. Metadata can be divided into two types: Device-managed metadata is additional information maintained by a storage device and used as part of object management in physical storage\cite{objectBasedStorage}. The second type is Custom metadata, to which users can store any additional information in key and value pairs. In object storage, metadata is stored together with the object.
+      \item \textbf{Metadata} - additional data that describe objects data. Metadata can be divided into two types: \textit{Device-managed metadata} is additional information maintained by a storage device and used as part of object management in physical storage\cite{objectBasedStorage}. The second type is \textit{Custom metadata}, to which users can store any additional information in key and value pairs. In object storage, metadata is stored together with the object.
       \item \textbf{A universally unique identifier (UUID)} - This ID, created using a hashing process based on object name and other additional information, is assigned to each object in object storage. Using ID object storage systems can tell apart objects from one another. ID is also used to extract data in a system without knowing their physical location/drive and offset.
     \end{itemize}
 
@@ -118,7 +118,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     %-resfull interface
     %-advantages of this approach
     %-popular intefaces
-    Object storage services provide a RESTful interface \cite{cloudObjectStorage} over HTTP protocol to store and access objects. This approach allows users to create, read, delete, update, or even query objects anytime and anywhere simply by referencing UUID (or using specific attributes for querying), usually with a proper authentication process. The most popular interfaces for communicating with object storages are Amazon S3 (Simple Storage Service) API and OpenStack Swift API.
+    Object storage services provide a \texttt{RESTful} interface \cite{cloudObjectStorage} over \texttt{HTTP} protocol to store and access objects. This approach allows users to create, read, delete, update, or even query objects anytime and anywhere simply by referencing UUID (or using specific attributes for querying), usually with a proper authentication process. The most popular interfaces for communicating with object storages are \textit{Amazon S3 (Simple Storage Service) API} and \textit{OpenStack Swift API}.
 
     %comparison to other storage models
     \subsection*{Pros and cons of object storage}
@@ -138,9 +138,9 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
 
 \section{Software-Defined storage}
     %introduction to topic
-    Software-Defined Storage(SDS) is a storage architecture that separates software storage from hardware allowing greater scalability, flexibility, and control over the data storage infrastructure. With the growth of Software-Defined Networks(SDN) and the need for Software-Defined Infrastructure(SDI), which aims to virtualize network resources and separate the control plane from the data plane, this principle was needed to be applied on Object storage as well\cite{sdsSDSMultiTenantEnv}.
+    \textit{Software-Defined Storage(SDS)} is a storage architecture that separates software storage from hardware allowing greater scalability, flexibility, and control over the data storage infrastructure. With the growth of \textit{Software-Defined Networks(SDN)} and the need for \textit{Software-Defined Infrastructure(SDI)}, which aims to virtualize network resources and separate the control plane from the data plane, this principle was needed to be applied on Object storage as well\cite{sdsSDSMultiTenantEnv}.
 
-    To overcome limitations of traditional storage infrastructures, the Software-Defined Storage (SDS) is imposed as a proper solution to simplify data and configuration management while improving the end-to-end control functionality of conventional storage systems\cite{sdsSurvey}. Furthermore, while traditional storages like storage area networks (SAN) and network-attached storage (NAS) provides scalability and reliability, SDS provides it with much lower cost by utilizing industry-standard or x86 system and therefore removing dependency on expensive hardware\cite{sdsWPRedHatSDS}.
+    To overcome limitations of traditional storage infrastructures, the Software-Defined Storage is imposed as a proper solution to simplify data and configuration management while improving the end-to-end control functionality of conventional storage systems\cite{sdsSurvey}. Furthermore, while traditional storages like storage area networks (SAN) and network-attached storage (NAS) provides scalability and reliability, SDS provides it with much lower cost by utilizing industry-standard or x86 system and therefore removing dependency on expensive hardware\cite{sdsWPRedHatSDS}.
 
     %principles
     % - Scale-out
@@ -154,7 +154,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
         \item \textbf{Scale-out} - SDS should enable low-cost horizontal scaling (by adding new commodity hardware to existing infrastructure) compared to vertical scaling with more powerful (and expensive) hardware.
         \item \textbf{Customizable} - SDS should offer system storage customization to meet specific storage QoS requirements. This will allow users to choose storage solution based on their requirements/performance and avoid unnecessary overpaying.
         \item \textbf{Automation} - once QoS is defined process of deployment and monitoring on object storage should be automated and done without the need for human resources.
-        \item \textbf{Masking} - SDS can mask an underlying storage system and distributed system as long as they provide common storage API and meet required QoS. SDS can offer block or File API even though data are saved in object storage (like Ceph does).
+        \item \textbf{Masking} - SDS can mask an underlying storage system and distributed system as long as they provide common storage API and meet required QoS. SDS can offer Block or File API even though data are saved in object storage (like Ceph\footnote{Ceph - distributed object, block, and file storage platform {\url{https://ceph.io}}} does).
         \item \textbf{Police Management} - SDS Software must manage storage according to specified policies and QoS requirements despite being in multi-tenant space. SDS must be capable of handling failures and autoscale in case of change in workloads.
     \end{itemize}
 
@@ -165,51 +165,51 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     %functions
     %benefits
     \subsection*{Architecture}
-    As previously described, the main characteristic of SDS is to separate storage functions into a control plane and data plane.
+    As previously described, the main characteristic of SDS is to separate storage functions into a \textit{control plane} and \textit{data plane}.
 
     \paragraph{Control plane}
-    the control plane is a software layer with the main goal to virtualize storage resources. The control plane manages data provision and provides orchestration of data services across object storage. Solutions that are part of the control plane allow policy automation, analytics and optimization, backup and copy management, security, and integration with the API services, including other cloud provider services\cite{sdsIBMSDSGuide}.
+    - the control plane is a software layer with the main goal to virtualize storage resources. The control plane manages data provision and provides orchestration of data services across object storage. Solutions that are part of the control plane allow policy automation, analytics and optimization, backup and copy management, security, and integration with the API services, including other cloud provider services\cite{sdsIBMSDSGuide}.
 
     \paragraph{Data plane}
-    - the data plane encompasses the infrastructure where data is processed. The data plane provides an interface to the hardware infrastructure and defines how the storage is accessed. It provides access methods to storage, such as block I/O (for example, iSCSI), File I/O (NFS, SMB, or Hadoop Distributed File System (HFDS)), and object-storage. It defines storage management functions, such as virtualization, RAID protection, tiering, encryption, compression, and data deduplication that can be requested by the control plane\cite{sdsIBMSDSGuide}.
+    - the data plane encompasses the infrastructure where data is processed. The data plane provides an interface to the hardware infrastructure and defines how the storage is accessed. It provides access methods to storage, such as \textit{Block I/O} (for example, iSCSI), \textit{File I/O} (NFS, SMB, or Hadoop Distributed File System (HFDS)), and \textit{object storage}. It defines storage management functions, such as virtualization, RAID protection, tiering, encryption, compression, and data deduplication that can be requested by the control plane\cite{sdsIBMSDSGuide}.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/sds-planes.eps}
-        \caption{SDS data and control plane.\cite{sdsPlanes}, remade}
+        \caption{SDS data and control plane (source: \cite{sdsPlanes}, remade).}
         \label{fig:sdsPlanes}
     \end{figure}
 
 \section{Beanstalk queue}
 
-    Beanstalk queue or shorter beanstalkd is a fast, simple and lightweight working queue\cite{beanstalkdOfficial}. The primary use case is to manage workflow between different parts of workers of application through working queues and messages. Beanstalkd was developed for the need of Facebook application in order to reduce average response time\cite{beanstalkdOfficial}. Provided by simple protocol design, heavily inspired by Memcached, implemented in programming language C, Beanstalkd offers lean architecture, which allows it to be installed and used very simply, making it perfect for many use cases\cite{beanstalkdInstall}.
+    Beanstalk queue or shorter \textbf{beanstalkd} is a fast, simple and lightweight working queue\cite{beanstalkdOfficial}. The primary use case is to manage workflow between different parts of workers of application through working queues and messages. Beanstalkd was developed for the need of Facebook application in order to reduce average response time\cite{beanstalkdOfficial}. Provided by simple protocol design, heavily inspired by Memcached, implemented in programming language C, Beanstalkd offers lean architecture, which allows it to be installed and used very simply, making it perfect for many use cases\cite{beanstalkdInstall}.
 
 
     \subsection{Beanstalkd elements}
     Beanstalkd is a priority queue with server-client architecture. The server represents queues where jobs are saved based on priority. Beanstalkd architecture is composed of several components:
     \begin{itemize}
-        \item Jobs - tasks stored by the client
-        \item Tubes - used for storing tasks, each tube contains a ready queue and a delay queue.
-        \item Producer - creates and sends jobs to beanstalkd using command "put".
-        \item Consumer - process "listening" on an assigned tube, reserves and consumes jobs from the tube.
+        \item \textbf{Jobs} - tasks stored by the client
+        \item \textbf{Tubes} - used for storing tasks, each tube contains a ready queue and a delay queue.
+        \item \textbf{Producer} - creates and sends jobs to beanstalkd using command \texttt{put}.
+        \item \textbf{Consumer} - process "listening" on an assigned tube, reserves and consumes jobs from the tube.
     \end{itemize}
 
     \subsection{Job Lifecycle}
-    Each job is uniquely assigned to one worker at a time. The client creates a job and inserts it into a beanstalkd tube using the "put" command. While being in the tube, the job can be in next states\cite{beanstalkdProtocol}:
+    Each job is uniquely assigned to one worker at a time. The client creates a job and inserts it into a beanstalkd tube using the \texttt{put} command. While being in the tube, the job can be in next states\cite{beanstalkdProtocol}:
     \begin{itemize}
-        \item \textbf{Ready} - the task is free and can be executed immediately by the Consumer.
-        \item \textbf{Delayed} - the task has assigned delay time that needs to expire before execution. After delay time expires, beanstalkd will automatically change its state to READY.
-        \item \textbf{Reserved} - the task is reserved and is being executed by the Consumer. Beanstalkd is responsible for checking whether the task is completed in time (TTR - Time to run).
-        \item \textbf{Buried} - reserved task, the task will not be removed nor executed until the client decides. This state is often used for further inspection in debugging process when failure or undefined behavior occurs during task execution.
-        \item \textbf{Deleted} - the task is deleted from the tube, beanstalkd no longer maintains these jobs.
+        \item \texttt{\textbf{Ready}} - the task is free and can be executed immediately by the Consumer.
+        \item \texttt{\textbf{Delayed}} - the task has assigned delay time that needs to expire before execution. After delay time expires, beanstalkd will automatically change its state to \texttt{Ready}.
+        \item \texttt{\textbf{Reserved}} - the task is reserved and is being executed by the \textit{Consumer}. Beanstalkd is responsible for checking whether the task is completed in time (\textbf{TTR} - Time to run).
+        \item \texttt{\textbf{Buried}} - reserved task, the task will not be removed nor executed until the client decides. This state is often used for further inspection in debugging process when failure or undefined behavior occurs during task execution.
+        \item \texttt{\textbf{Deleted}} - the task is deleted from the tube, beanstalkd no longer maintains these jobs.
     \end{itemize}
 
-    Figure \ref{fig:beanstalkdJobSM} describes the life cycle of a job in a beanstalkd tube. Job is created by Producer using put command. Beanstalkd allows the Producer to add delay time before the task is ready for execution, setting the job state to DELAYED. After delay time expires, beanstalkd will automatically change job state to READY. The Producer can specify job priority and jobs with the READY state are stored in the priority queue. A job with the biggest priority is reserved and executed by a Consumer. After successfully executing the task, the Consumer will delete the job from beanstalkd. If some error occurs, the Consumer can bury the task. The Consumer can decide that he is not interested in completing the reserved task. Using the release command (with optional delay) job state will be changed back to READY (or DELAY). Jobs with the BURIED state will not be touched by the beanstalkd server until the client "kicks" them to READY state.
+    Figure \ref{fig:beanstalkdJobSM} describes the life cycle of a job in a beanstalkd tube. Job is created by \textit{Producer} using put command. Beanstalkd allows the \textit{Producer} to add delay time before the task is ready for execution, setting the job state to \texttt{Delayed}. After delay time expires, beanstalkd will automatically change job state to \texttt{Ready}. The Producer can specify job priority and jobs with the \texttt{Ready} state are stored in the priority queue. A job with the biggest priority is reserved and executed by a \textit{Consumer}. After successfully executing the task, the \textit{Consumer} will delete the job from beanstalkd. If some error occurs, the \textit{Consumer} can \textbf{bury} the task. The Consumer can decide that he is not interested in completing the reserved task. Using the \texttt{release} command (with optional delay) job state will be changed back to \texttt{Ready} (or \texttt{Delay} if delay exists). Jobs with the \texttt{Burried} state will not be touched by the beanstalkd server until the client \texttt{"kicks"} them to \texttt{READY} state.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/beanstalkd-job-states.eps}
-        \caption{State machine diagram of job in Beanstalkd tube}
+        \caption{State machine diagram of job in Beanstalkd tube.}
         \label{fig:beanstalkdJobSM}
     \end{figure}
 
@@ -218,26 +218,26 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     Key beanstalkd characteristics are:
 
     \paragraph{Asynchronous}- beanstalkd allows producers to put jobs in the queue, and workers can process them later.
-    \paragraph{Distributed}- in the same way as Memcached, beanstalkd can be distributed, although this distribution is handled by clients. The beanstalkd server does not know anything about other beanstalkd running instances.
+    \paragraph{Distributed}- in the same way as \textit{Memcached}\footnote{Memcached - in-memory key-value store {\url{https://memcached.org/}}}, beanstalkd can be distributed, although this distribution is handled by clients. The beanstalkd server does not know anything about other beanstalkd running instances.
     \paragraph{Persistent}- beanstalkd offers support for persistent jobs during which all jobs are written to binlog. In case of a power outage, after restarting a beanstalkd instance, it will recover jobs content from the logs.
-    \paragraph{Not secured}- beanstalkd is designed to be run in a private/secure network. Therefore it does not support authentication or authorization.
+    \paragraph{Not secured}- beanstalkd is designed to be run in a private/secure network. Therefore it \textbf{does not support authentication or authorization}.
     \paragraph{Scalability}- beanstalkd can be scaled horizontally, although it must be done on the client side, where each client would connect to multiple servers and then use specific algorithms(e.g., Round-robin) to switch between the different servers.
 
 \section{Event notifications}
     %introduction
-    An \textit{event} is a runtime operation executed by a software element, representing a significant change or occurrence in a system. Event is created in order to make some information available to other software elements not specified by the operation\cite{eventArchitecturalPatterns}.
+     \textbf{An event} is a runtime operation executed by a software element, representing a significant change or occurrence in a system. Event is created in order to make some information available to other software elements not specified by the operation\cite{eventArchitecturalPatterns}.
 
     \textbf{Event notification} is a message created by a system in order to notify other parts of the system that an event has taken place\cite{eventRedHatEventDrivenArch}. Event notifications are usually used for monitoring and asynchronous job processing.
 
-    In object storage, event notifications are used to notify users or tenants about specific changes and occurrences in their bucket or account. Typical event notifications include creating new (or updating existing) objects in the bucket. In addition, most object vendors offer Publish/subscribe notifications, allowing users to subscribe to certain types of event notifications using predefined rules. Information about rules specifying event notifications is usually stored in the upper-level metadata (bucket or account).
+    In object storage, event notifications are used to notify users or tenants about specific changes and occurrences in their bucket or account. Typical event notifications include creating new (or updating existing) objects in the bucket. In addition, most object vendors offer \textbf{publish/subscribe} notifications, allowing users to subscribe to certain types of event notifications using predefined rules. Information about rules specifying event notifications is usually stored in the upper-level metadata (bucket or account).
 
     \subsection{CloudEvents}
     Publishers tend to describe event data differently due to non-existing standards or formats. The lack of a common way to describe events means developers have to learn how to handle events from each event source. To solve this problem, CloudEvents was created.
 
-    CloudEvents is a specification for describing event data in common way\cite{eventCloudEvents} hosted by Cloud Native Computing Foundation (CNCF)\cite{eventCNCF}. CloudEvents goal is to dramatically simplify event specification and delivery across services, platforms and beyond.
+    \textbf{CloudEvents} is a specification for describing event data in common way\cite{eventCloudEvents} hosted by CNCF\footnote{CNCF - Cloud Native Computing Foundation {\url{https://www.cncf.io/}}}. CloudEvents goal is to dramatically simplify event specification and delivery across services, platforms and beyond.
     CloudEvents has been integrated by many popular object storage vendors, such as Oracle Cloud, IBM Cloud Code Engine, Azure, Google Cloud, etc.
 
-    Attributes in CloudEvents specification can be divided into 3 categories:
+    Attributes in CloudEvents specification can be divided into three categories:
     \paragraph{Required attributes} - set of attibures that are required to be included in all events\cite{eventCloudEventsSpec}:
     \begin{itemize}
         \item id (string) - event identifier, must not be empty.
@@ -260,7 +260,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
         \item extension attributes - custom attibutes allowing external systems to attach metadata to an event.
     \end{itemize}
 
-    \begin{lstlisting}[style=jsonStyle, caption=Example of event described using CloudEvents specification and JSON]
+    \begin{lstlisting}[style=jsonStyle, caption=Example of event described using CloudEvents specification in JSON format.]
     {
         "specversion" : "1.0",
         "type" : "com.github.pull_request.opened",
@@ -276,23 +276,23 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \end{lstlisting}
 
     \subsection{Amazon S3 event notifications}
-    Amazon Simple Storage Service (S3) is one of the most popular cloud object storages providing a REST web service interface. Amazon S3 is reliable, scalable, commercial and one of the most popular object storage that manages Web-Scale computing by itself\cite{eventS3}. As a result, Amazon S3 has a big impact on object storage and most other object storage vendors crated compatible S3 API for their services.
+    \textbf{Amazon Simple Storage Service (S3)} is one of the most popular cloud object storages providing a \texttt{REST} web service interface. Amazon S3 is reliable, scalable, commercial and one of the most popular object storage that manages Web-Scale computing by itself\cite{eventS3}. As a result, Amazon S3 has a big impact on object storage and most other object storage vendors crated compatible \textbf{S3 API} for their services.
 
-    One of the monitoring features that Amazon S3 provides is Event Notification, which offers users to receive notifications when certain events happen in their S3 bucket. To enable such notifications, users need to create a notification configuration that identifies which events Amazon S3 should publish\cite{eventS3EventNotification}. Notifications are configured at the bucket level and then applied to each object in the bucket.
+    One of the monitoring features that Amazon S3 provides is \textbf{Event Notification}, which offers users to receive notifications when certain events happen in their S3 bucket. To enable such notifications, users need to create a notification configuration that identifies which events Amazon S3 should publish\cite{eventS3EventNotification}. Notifications are configured at the bucket level and then applied to each object in the bucket.
 
     Amazon S3 provides limited event destinations to which event notification messages can be send\cite{eventS3EventNotificationDest}:
     \begin{itemize}
-        \item Amazon Simple Notification Service (Amazon SNS) - flexible, fully managed push messaging service, can be used to send messages to mobile phones or distributed services.
-        \item Amazon Simple Queue Service (Amazon SQS) queues - reliable and scalable hosted queues for storing messages as they travel between computers.
-        \item AWS Lambda - serverless, event-driven compute service. Lambda can run custom code in response to the Amazon S3 bucket event (if the lambda function writes to the same bucket that triggers the notification, it can create an execution loop).
-        \item Amazon EventBridge - serverless event bus service used to receive events from AWS. It allows users to define rules to match events and deliver them to defined targets.
+        \item \textit{Amazon Simple Notification Service (Amazon SNS)} - flexible, fully managed push messaging service, can be used to send messages to mobile phones or distributed services.
+        \item \textit{Amazon Simple Queue Service (Amazon SQS)} queues - reliable and scalable hosted queues for storing messages as they travel between computers.
+        \item \textit{AWS Lambda} - serverless, event-driven compute service. Lambda can run custom code in response to the Amazon S3 bucket event (if the lambda function writes to the same bucket that triggers the notification, it can create an execution loop).
+        \item \textit{Amazon EventBridge} - serverless event bus service used to receive events from AWS. It allows users to define rules to match events and deliver them to defined targets.
     \end{itemize}
 
-    By this date, Amazon S3 does not support CloudEvents specification and describes event data in its own way. Some of the event types that Amazon S3 can publish are displayed in table \ref{tab:eventTypesS3}.
+    By this date, Amazon S3 \textbf{does not support CloudEvents} specification and describes event data in its own way. Some of the event types that Amazon S3 can publish are displayed in table \ref{tab:eventTypesS3}.
 
 
      \renewcommand*{\arraystretch}{1.4}
-     \begin{table}
+     \begin{table}[H]
      \begin{tabularx}{\textwidth}{|p{0.3\textwidth}|X|}
          \hline
          \textbf{Event type} & \textbf{Desription} \\
@@ -338,30 +338,30 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \subsection*{Cluster organization}
     Instead of a traditional cluster ring-like layout, OpenIO SDS is based on a grid of nodes \ref{fig:oioArch}. It is flexible and resource-conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table algorithm. Instead, OpenIO SDS uses distributed directory for organizing data and metadata hash tables, which allows the software to attain the same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=1\textwidth]{obrazky-figures/openio-architecture.eps}
-        \caption{Layered view on OpenIO SDS architecture.\cite{oioArch}}
+        \caption{Layered view on OpenIO SDS architecture (source: \cite{oioArch}).}
         \label{fig:oioArch}
     \end{figure}
 
 
     \subsection*{Tiering}
     With tiering, OpenIO SDS offers users to configure a pool containing a group of hardware that can then be used to store specific types of objects. For example, users can create a pool of high-performance hard disks (e.g. SSDs) and use the pool to store objects that require low latency.
-    This feature is realized by a mechanism called storage policies. Multiple storage policies can be defined in one particular namespace. Storage policies can also be used for specifying how many replicas should be created for a specific dataset\cite{oioCoreSolution}.
+    This feature is realized by a mechanism called \textbf{storage policies}. Multiple storage policies can be defined in one particular namespace. Storage policies can also be used for specifying how many replicas should be created for a specific dataset\cite{oioCoreSolution}.
 
     \subsection*{ConsciousGrid}
-    ConsciousGrid is an OpenIO technology that uses real-time metrics from the nodes(CPU, I/O, capacity) automatically discover and place data in the most appropriate place. It provides load balancing and computes a score for each node and then provides weighted random selection\cite{oioSdsServices}.
+    ConsciousGrid is an OpenIO technology that uses real-time metrics from the nodes(CPU, I/O, capacity) automatically discover and place data in the most appropriate place. It provides \textbf{load balancing} and computes a score for each node and then provides weighted random selection\cite{oioSdsServices}.
 
 
     \section{Data organization}
-    Multi-tenancy is one of the core concepts in OpenIO SDS. Data objects are stored within following hierarchy: Namespace/Account/Container/Object \ref{fig:oioDataOrganization}. Multiple namespaces can be configured in each cluster, providing multi-region/zone logical layouts for applications and segregated workloads depending on a tenant or geo-distribution need\cite{oioSdsConcepts}.
+    Multi-tenancy is one of the core concepts in OpenIO SDS. Data objects are stored within following hierarchy: \texttt{Namespace/Account/Container/Object} \ref{fig:oioDataOrganization}. Multiple namespaces can be configured in each cluster, providing multi-region/zone logical layouts for applications and segregated workloads depending on a tenant or geo-distribution need\cite{oioSdsConcepts}.
     There is no classic subdirectory tree. Instead, objects are stored in a flat structure in the container level. However, like many other object storages, there is a way to emulate a filesystem.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.5\textwidth]{obrazky-figures/openio-data-organization.eps}
-        \caption{Object data organization in OpenIO SDS.\cite{oioCoreSolution}}
+        \caption{Object data organization in OpenIO SDS (source: \cite{oioCoreSolution}).}
         \label{fig:oioDataOrganization}
     \end{figure}
 
@@ -375,7 +375,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     Container represents an object bucket. Each container belongs to one (and only one) account and is identified by a unique name within the account. The container carries additional information specifying how to manage its objects (e.g. how to secure them)\cite{oioCoreSolution}.
 
     \subsection{Object}
-    Object is the smallest data unit visible by a customer and represents a named BLOB with metadata. OpenIO SDS allows several objects to be stored in a container and are considered versions of the same object. Classic API operations (PUT/GET/DELETE) will be directed towards an object with the latest version. If the size of an object is larger than the specified limit at the namespace level, the object will be divided into chunks of data. This behavior allows capacity optimization as well as distributed reads that could be particularly useful for high-speed video streaming of large media\cite{oioCoreSolution}.
+    Object is the smallest data unit visible by a customer and represents a named BLOB with metadata. OpenIO SDS allows several objects to be stored in a container and are considered versions of the same object. Classic \texttt{API} operations (\texttt{PUT/GET/DELETE}) will be directed towards an object with the latest version. If the size of an object is larger than the specified limit at the namespace level, the object will be divided into chunks of data. This behavior allows capacity optimization as well as \textbf{distributed reads} that could be particularly useful for high-speed video streaming of large media\cite{oioCoreSolution}.
 
     %todo authentication and acl?
 
@@ -384,13 +384,13 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     OpenIO offers Serverless computing in object storage cluster nodes using the framework Grid For Apps.
     \subsection{Grid For Apps}\label{sec:oioGridForApps}
 
-    Like Amazon AWS Lambda, OpenIO offers an event-driven compute service called Grid for Apps that works on top of OpenIO.
+    Like Amazon AWS Lambda, OpenIO offers an \textbf{event-driven compute service} called Grid for Apps that works on top of OpenIO.
 
     Grid for Apps intercepts all the events that happen in the storage layer, and based on user configuration, triggers specific applications or scripts to act on data (metadata) stored in object storage\cite{oioNextGen}. The application is executed in cluster nodes and utilizes free unused resources available in the cluster. This improves efficiency (fewer data moving since object data are already available) and saves money (no need for external resources)\cite{oioNextGen}.
 
     Grid for Apps allows customers to perform operations such as metadata enrichment, data indexing and search (e.g. indexing metadata to Elasticsearch), pattern recognition, machine learning, data filtering, monitoring, etc\cite{oioNextGen}.
 
-    Grid for Apps in OpenIO is realized using service event-agent and beanstalkd queue.
+    Grid for Apps in OpenIO is realized using service \texttt{event-agent} and \texttt{beanstalkd} queue.
 
     \subsection{Event-agent}\label{sec:oioEvent-Agent}
     Event-agent is an OpenIO service responsible for handling asynchronous jobs. It relies on beanstalkd backend to manage jobs. Event-agent key characteristics are\cite{oioSdsServices}:
@@ -403,14 +403,17 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     Every event that occurs in OpenIO is inserted in a beanstalkd tube. Event-agent is listening to the beanstalkd tube and consumes jobs from it. Consumers are produced using Eventlet Network Library \cite{oioEventlet}. The number of workers can be configured.
 
     In event-agent, users can specify handlers for each type of event in event-handler.conf.
-    Some of the event types in OpenIO are storage.content.new, storage.container.deleted, etc.
+    Some of the event types in OpenIO are \texttt{storage.content.new} (e.g., new object in storage), \texttt{storage.container.deleted} (e.g., object has been deleted), etc.
 
-    \textit{Events handler} is defined as a pipeline containing applications that will react to the event. For example, deleting an object will invoke storage.content.deleted event. Event-agent will handle the event using content\_cleaner application, which deletes objects chunks from object storage.
+    \textbf{Events handler} is defined as a pipeline containing applications that will react to the event. In example \ref{lst:event-agent-handlers}, deleting an object will invoke \texttt{storage.content.deleted} event. Event-agent will handle the event using \texttt{content\_cleaner} application, which deletes objects chunks from object storage.
+
+    OpenIO offers users to process events outside of the event-agent. In order to do that, users can use the application \texttt{notify} which will send an event to a specified beanstalkd tube. Then a user can create a custom consumer process that will execute the job from beanstalkd tube. An example of such configuration is displayed in listing \ref{lst:event-agent-handlers}.
 
     \lstset{
         caption=Example of event-agent handler configuration,
         label=lst:event-agent-handlers
     }
+    \begin{minipage}{\linewidth}
     \begin{lstlisting}
     [handler:storage.content.deleted]
     pipeline = content_cleaner
@@ -426,9 +429,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     tube = oio-rebuild
     queue_url = ${QUEUE_URL}
     \end{lstlisting}
-    %todo caption
-
-    OpenIO offers users to process events outside of the event-agent. In order to do that, users can use the application "notify" which will send an event to a specified beanstalkd tube. Then a user can create a custom consumer process that will execute the job from beanstalkd tube. An example of such configuration is displayed in listing \ref{lst:event-agent-handlers}.
+    \end{minipage}
 
 \chapter{OpenStack Swift}\label{chap:swift}
     This chapter introduces OpenStack object storage (code name Swift) and describes its key features. Furthermore, this chapter elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
@@ -480,7 +481,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     The path towards data in OpenStack Swift consists of four main software services: \textbf{Proxy server}, \textbf{Account server}, \textbf{Continaer server} and \textbf{Object server}. Typically Account, Container and Object server are located on same machine creating \textbf{Storage node}.
 
     \subsection{Proxy server}
-    The proxy server is the service responsible for communication with external clients. For each request, it will look up storage location(node) for an account, container, or object and route the request accordingly\cite{SwiftArchitecturalOverview}. The proxy server is responsible for handling many failures. For example, when a client sends a PUT request to OpenStack Swift, the proxy server will determine which nodes store the object. If some node fails, a proxy server will choose a hand-off node to write data. When a majority of nodes respond successfully, then the server proxy will return a success response code\cite{swiftOpenStackSwift}.
+    The proxy server is the service responsible for communication with external clients. For each request, it will look up storage location(node) for an account, container, or object and route the request accordingly\cite{SwiftArchitecturalOverview}. The proxy server is responsible for handling many failures. For example, when a client sends a \texttt{PUT} request to OpenStack Swift, the proxy server will determine which nodes store the object. If some node fails, a proxy server will choose a hand-off node to write data. When a majority of nodes respond successfully, then the server proxy will return a success response code\cite{swiftOpenStackSwift}.
 
     \subsection{Account server}
     Account server stores information about containers in a particular account to SQL database. It is responsible for listing containers. It does not know where specific containers are, just what containers are in an account\cite{SwiftArchitecturalOverview}.
@@ -489,9 +490,9 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     Container server is similar to account server, except it is responsible for listing objects and also does not know where specific objects are\cite{SwiftArchitecturalOverview}.
 
     \subsection{Object server}
-    The Object Server is blob storage capable of storing, retrieving, and deleting objects. Objects are stored as binary files to a filesystem, where metadata are stored in the file's extended attributes (xattrs). This requires a filesystem with support of such attributes. Each object is stored using a hash value of object path (account/container/object) and timestamp. This allows storing multiple versions of an object. Since last write wins (due to timestamp), it is ensured that the correct object version is served\cite{SwiftArchitecturalOverview}.
+    The Object Server is blob storage capable of storing, retrieving, and deleting objects. Objects are stored as binary files to a filesystem, where metadata are stored in the \textit{file's extended attributes (xattrs)}. This requires a filesystem with support of such attributes. Each object is stored using a hash value of object path (account/container/object) and timestamp. This allows storing multiple versions of an object. Since last write wins (due to timestamp), it is ensured that the correct object version is served\cite{SwiftArchitecturalOverview}.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.75\textwidth]{obrazky-figures/swift-servers.eps}
         \caption{OpenStack Swift servers architecture.}
@@ -502,12 +503,12 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     Using Python WSGI middleware, users can add functionalities and behaviors to OpenStack Swift. Most middlewares are added to the Proxy server but can also be part of other servers (account server, container server, or object server).
 
     Middlewares are added by changing the configuration of servers. In example \ref{lst:swiftMiddleware}
-    webhook middleware is added into the proxy server by changing its pipeline (\textit{pipeline:main}). Middlewares are executed in the given order (first will be called webhook middleware, then proxy-server middleware).
+    \texttt{webhook middleware} is added into the proxy server by changing its pipeline (\textit{pipeline:main}). Middlewares are executed in the given order (first will be called webhook middleware, then proxy-server middleware).
 
     Some of the middlewares are required and will be automatically inserted by swift code\cite{swiftMiddleware}.
 
     \lstset{
-        caption=Example of proxy server configuration (proxy-server.conf),
+        caption=Example of proxy server configuration (proxy-server.conf).,
         label=lst:swiftMiddleware
     }
     \begin{lstlisting}
@@ -528,9 +529,9 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \subsection{Interface}
     OpenStack Swift servers are implemented using Python WSGI applications. Therefore only Python WSGI middlewares are accepted in OpenStack Swift.
 
-    In \ref{lst:swift-healthcheck} is example of simplified healthcheck middleware. The constructor takes two arguments, the first is a WSGI application, and the second is a configuration of middleware defined using Python Paste framework in proxy-server.conf. Middleware must have a call method containing the request environment information and response from previously called middleware. Middleware can perform some operations and call the next middleware in the pipeline or intercept a request. In the healtcheck example, if the path directs to /healtcheck , the middleware will return HTTP Response, and other middlewares in the pipeline will not be called.
+    In \ref{lst:swift-healthcheck} is example of simplified \texttt{healthcheck middleware}. The constructor takes two arguments, the first is a WSGI application, and the second is a configuration of middleware defined using Python Paste framework in \texttt{proxy-server.conf}. Middleware must have a call method containing the request environment information and response from previously called middleware. Middleware can perform some operations and call the next middleware in the pipeline or intercept a request. In the healtcheck example, if the path directs to \texttt{/healtcheck} , the middleware will return \texttt{HTTP Response}, and other middlewares in the pipeline will not be called.
 
-    Method filter\_factory is used by the Python Paste framework to instantiate middleware.
+    Method \texttt{filter\_factory} is used by the Python Paste framework to instantiate middleware.
 
 \begin{lstlisting}[language=Python, style=pythonStyle, caption=Example of healthcheck middleware in OpenStack Swift, label=lst:swift-healthcheck]
 import os
@@ -558,12 +559,12 @@ def filter_factory(global_conf, **local_conf):
     \subsection{Metadata}
     OpenStack Swift separates metadata into 3 categories based on their use:
     \begin{itemize}
-        \item \textbf{User Metadata} - User metadata takes form \textbf{X-<type>-Meta-<key>: <value>}, where \textbf{type} represent resource type(i.e. account, container, object), where \textbf{<key>} and \textbf{<value>} are set by user. User metadata remain persistent until are updated using new value or removed using header  \textbf{X-<type>-Meta-<key>} with no value or a header \textbf{X-Remove-<type>-Meta-<key>: <ignored-value>}.
-        \item \textbf{System Metadata} - System metadata takes the form of \textbf{X-<type>-Sysmeta-<key>: <value>}, where \textbf{type} represent resource type(i.e. account, container, object) and \textbf{<key>} and \textbf{<value>} are set by internal service in Swift WSGI Server.
+        \item \textbf{\texttt{User Metadata}} - User metadata takes form \texttt{X-<type>-Meta-<key>: <value>}, where \texttt{<type>} represent resource type(i.e. account, container, object), and \texttt{<key>} and \texttt{<value>} are set by user. User metadata remain persistent until are updated using new value or removed using header \texttt{X-<type>-Meta-<key>} with no value or a header \texttt{X-Remove-<type>-Meta-<key>: <ignored-value>}.
+        \item \textbf{\texttt{System Metadata}} - System metadata takes the form of \texttt{X-<type>-Sysmeta-<key>: <value>}, where \texttt{<type>} represent resource type(i.e. account, container, object) and \texttt{<key>} and \texttt{<value>} are set by internal service in Swift WSGI Server.
         All headers containing system metadata are deleted from a client request.
 
         System metadata are visible only inside Swift, providing a means to store potentially sensitive information regarding Swift resources.
-        \item \textbf{Object Transient-Sysmeta} - System metadata takes the form of \textbf{X-Object-Transient-Sysmeta-<key>: <value>}. Transient-sysmeta has a similar behavior as system metadata and can be accessed only within Swift, and headers containing Transient-sysmeta are dropped. If middleware wants to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
+        \item \textbf{\texttt{Object Transient-Sysmeta}} - System metadata takes the form of \texttt{\newline X-Object-Transient-Sysmeta-<key>:<value>}. Transient-sysmeta has a similar behavior as system metadata and can be accessed only within Swift, and headers containing Transient-sysmeta are dropped. If middleware wants to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
     \end{itemize}
 
 \chapter{MinIO}\label{chap:minio}
@@ -573,7 +574,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     MinIO is software-defined object storage that provides high performance and scalability. MinIO was designed to be the standard in private/hybrid cloud object storage.
     It runs on industry-standard hardware and is 100\% open source\cite{minioObjectStorage}.
 
-    MinIO software-defined object storage suite consists of a MinIO server and optional components.
+    MinIO software-defined object storage suite consists of a \textit{MinIO server} and optional components.
 
     \paragraph{MinIO Server} - MinIO Server is distributed object storage server.
     \paragraph{MinIO Client} - Service provoding familiar UNIX commands like \textit{ls, cat, cp, diff} in MinIO storage.
@@ -589,7 +590,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \subsection*{Encryption and WORM}
     MinIO provides per-object encryption using a unique object key protected by a master key managed key-management system (KMS).
 
-    MinIO supports object locking by enforcing Write-Once-Read-Many(WORM) immutability until the lock is expired or lifted. This mode prevents tempering with data once written\cite{minioHighPerformance}.
+    MinIO supports object locking by enforcing \textit{Write-Once-Read-Many(WORM)} immutability until the lock is expired or lifted. This mode prevents tempering with data once written\cite{minioHighPerformance}.
 
     \subsection*{Metadata architecture}
     MinIO does not provide separate storage for metadata. All operations are performed on object-level granularity. This approach isolates any failures and does not allow any spillover to larger system failures\cite{minioIntel}.
@@ -602,7 +603,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
     Supported event notification targets are AMQP, Redis, MySQL, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks, and NSQ.
 
-    Beside events occred on objects such as \textbf{s3:ObjectCreated:*} and \textbf{s3:ObjectRemoved:*}, MinIO offers event notification for access to storage \textbf{s3:ObjectAccessed:*} and event notification when bucket is created \textbf{s3:BucketCreated} and deleted \textbf{s3:BucketRemoved}.
+    Beside events occred on objects such as \texttt{s3:ObjectCreated:*} and \texttt{s3:ObjectRemoved:*}, MinIO offers event notification for access to storage \texttt{s3:ObjectAccessed:*} and event notification when bucket is created \texttt{s3:BucketCreated} and deleted \texttt{s3:BucketRemoved}.
 
 
 \chapter{Solution draft}\label{chap:solution}
@@ -623,14 +624,14 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Two proposed solutions lacked a standard interface for event publishing (no support for either Amazon S3 or CloudEvents), which were not accepted and are outdated.
 
     \subsection{MinIO}
-    MinIO supports event publishing in the form of Bucket notifications. It can inform a user when an object is created, updated, or deleted. Besides events regarding objects, MinIO provides events notifications for replication events and evens regarding creating and deleting buckets. Furthermore, MinIO allows users to configure which events will be published using the Amazon S3 event notification structure.
+    MinIO supports event publishing in the form of \textit{Bucket notifications}. It can inform a user when an object is created, updated, or deleted. Besides events regarding objects, MinIO provides events notifications for replication events and evens regarding creating and deleting buckets. Furthermore, MinIO allows users to configure which events will be published using the Amazon S3 event notification structure.
 
     MinIO offers various notification targets (e.g., MySql, Redis, Elasticsearch) but does not offer Beanstalkd as a notification target.
 
-    Minio is open-source object storage but does not provide custom middlewares. However, since MinIO is implemented in the Go programming language, any custom changes (tweaks) in MinIO source code means that the whole project needs to be compiled, which can result in incompatibility in future versions of MinIO.
+    Minio is open-source object storage but \textbf{does not provide custom middlewares}. However, since MinIO is implemented in the Go programming language, any custom changes (tweaks) in MinIO source code means that the whole project needs to be compiled, which can result in incompatibility in future versions of MinIO.
 
 \section{Middleware for OpenStack Swift and OpenIO SDS}
-    The goal is to create common application/middleware capable of running within OpenStack Swift and OpenIO SDS. The middleware will allow users to configure: which types of events will be published and a destination where given events will be published. Proposed middleware will be called \textbf{EventNotification}.
+    The goal is to create common application/middleware capable of running within OpenStack Swift and OpenIO SDS. The middleware will allow users to configure: which types of events will be published and a destination where given events will be published. Proposed middleware will be called \textbf{\texttt{EventNotification}}.
 
     \subsection{Location}
     For OpenIO SDS ideal place to run new middleware is inside the pipeline of event-agent. The main reason is that the event-agent has access to every event that occurs in OpenIO SDS and processes jobs in asynchronous mode, which means it will not impact the latency of client requests.
@@ -638,22 +639,22 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Most of the middlewares within OpenStack Swift are placed in the Proxy server since they can react to every client request. Therefore, the new proposed middleware will also be placed inside the Proxy server pipeline.
 
     \subsection{Design}
-    Middleware heavily utilizes containers/buckets and accounts metadata. Information about which event should be published and where will be stored in metadata of upper level. For publishing events regarding objects, the configuration will be stored in a container/bucket metadata (for container/bucket events, the configuration will be stored in the account level).
+    The proposed middleware heavily utilizes containers/buckets and accounts metadata. Information about which event should be published and where will be stored in metadata of upper level. For publishing events regarding objects, the configuration will be stored in a container/bucket metadata (for container/bucket events, the configuration will be stored in the account level).
 
     Compared to Amazon S3 Notifications, EventNotification middleware will publish events regarding containers/buckets. Furthermore, EventNotification middleware will publish events regarding access to object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in a bucket.
 
     EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. This option could be beneficial when there are many reads from object storage, and publishing those events could significantly impact object storage performance. Therefore such event types can be disabled for whole object storage.
 
     Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configuration for publishing objects in a given container. Therefore the first step is to parse and validate such metadata. If the event notification configuration is not valid, then such configuration will be removed from metadata.
-
-    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, EventNotification middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
-
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.8\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
         \caption{Acitiviy diagram of EventNotification middleware.}
         \label{fig:middlewareActivity}
     \end{figure}
+    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, \texttt{EventNotification} middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
+
+
 
     \subsection{Structure of published event}
     EventNotification can publish event notification in Amazon S3 like structure and in structure following CloudEvents standard. Listing \ref{lst:eventStructureCE} and \ref{lst:eventStructureS3} describes event notification structure in JSON format.
@@ -682,6 +683,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     }
     \end{lstlisting}
 
+    \begin{minipage}{\linewidth}
     \begin{lstlisting}[style=jsonStyle, caption=Amazon S3 structure of event notification published by EventNotification middleware., label=lst:eventStructureS3]
     {
        "Records":[
@@ -691,7 +693,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
              "eventTime":"The time, in ISO-8601 format, for example, 1970-01-01T00:00:00.000Z, when an object storage finished processing the request",
              "eventName":"event-type",
              "userIdentity":{
-                "principalId":"if od user who caused the event"
+                "principalId":"id of user who caused the event"
              },
              "requestParameters":{
                 "sourceIPAddress":"ip address where request came from"
@@ -721,26 +723,17 @@ This chapter introduces MinIO object storage, describes its key features, most e
        ]
     }
     \end{lstlisting}
+    \end{minipage}
 
     \subsection{Event Notification configuration}
-    User can store event notification configuration using metadata with key \textbf{EventNotificationConfiguration} where value is configuration.
+    User can store event notification configuration using metadata with key \textbf{\texttt{\newline EventNotificationConfiguration}} where value is configuration.
     EvenNotifcation middleware offers Amazon S3 like structure for configuring event notifications.
-    Listing \ref{lst:eventConfiguration} describes event notification configuration.
 
-    \textbf{<Target>} represent targeted destination where event notifications will be sent (e.g., Beanstalkd, Elasticsearch).
+    Listing \ref{lst:eventConfiguration} describes event notification configuration. \texttt{<Target>} represent targeted destination where event notifications will be sent (e.g., Beanstalkd, Elasticsearch). \texttt{<FilterKey>} is a unique name of a filter containing rules that must be satisfied in order to publish events.
 
-    \textbf{<FilterKey>} is a unique name of a filter containing rules that must be satisfied in order to publish events.
+    Even type takes form \texttt{s3:<Type><Action>:<Method>} and are compatible with Amazon S3 event types. Type represents resource type (object, bucket), action represent action preformed by user and can have values: \texttt{Created, Removed, Accessed}. The method represents the REST API method performed by a user: \texttt{Get, Put, Post, Delete, Copy, Head}. For example, if a new object was created, even type would be described as \texttt{\newline s3:ObjectCreated:Put}. To match event type regardless of API method assign value \texttt{*} to \texttt{<Method>}.
 
-    Event types are described in pseudo-Amazon S3 way. Even type takes form \textbf{s3:<Type><Action>:<Method>} where type represents resource type (object, bucket), action represent action preformed by user and can have values: \textbf{Created, Removed, Accessed}. The method represents the REST API method performed by a user: \textbf{Get, Put, Post, Delete, Copy, Head}. For example, if a new object was created, even type would be described as \textbf{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \textbf{*} to \textbf{<Method>}.
-
-    \lstset{
-        string=[s]{"}{"},
-        stringstyle=\color{darkpastelred},
-        comment=[l]{:},
-        commentstyle=\color{black},
-        caption=Strucute of event notification configuration,
-        label=lst:eventConfiguration
-    }
+    \begin{minipage}{\linewidth}
     \begin{lstlisting}[style=jsonStyle, caption=Strucute of event notification configuration,    label=lst:eventConfiguration]
     {
       "<Target>Configrations": [
@@ -765,22 +758,23 @@ This chapter introduces MinIO object storage, describes its key features, most e
       ]
     }
     \end{lstlisting}
+    \end{minipage}
 
 
 \section{Proxy for MinIO}
     MinIO has support for event notifications. The main problem is that it does not support Beanstalkd as an event notification destination. Since any change in MinIO source code could lead to incompatibility with future versions and with no support for custom applications/middlewares inside MinIO, the safest solution to publish event notifications from MinIO to Beanstalkd would be a proper proxy application.
 
-    The proposing proxy application would connect to some of the supported event notifications destinations (e.g., MQTT), subscribe to events coming from MinIO, and forward them to Beanstalkd.
+    The proposing proxy application would connect to some of the supported event notifications destinations (e.g., MQTT\footnote{MQTT - extremely lightweight publish/subscribe messaging protocol {\url{https://mqtt.org/}}}), subscribe to events coming from MinIO, and forward them to Beanstalkd.
 
-    \begin{figure}[hbt]
+    \begin{figure}[H]
         \centering
-        \includegraphics[width=1\textwidth]{obrazky-figures/minio-proxy.eps}
+        \includegraphics[angle=90,height=0.78\textheight]{obrazky-figures/minio-proxy.eps}
+        %\includegraphics[width=1\textwidth]{obrazky-figures/minio-proxy.eps}
         \caption{Sequence diagram of proxy application allowing publishing events from MinIO to Beanstalkd.}
         \label{fig:minioProxy}
     \end{figure}
 
-    Figure \ref{fig:minioProxy} shows a sequence diagram of the proposed proxy application for MQTT. The user configures MinIO event notifications using MinIO client or MinIO SDKs. Proxy application subscribes for MinIO messages in MQTT. Once event notification is sent from MinIO to MQTT, MQTT will send the event notification to subscribers, in this case Proxy application. Proxy application will receive a message containing an event notification from MinIO and forward it to Beanstalkd.
-
+    Figure \ref{fig:minioProxy} shows a sequence diagram of the proposed proxy application for MQTT. The user configures MinIO event notifications using \textit{MinIO client} or \textit{MinIO SDKs}. Proxy application subscribes for MinIO messages in MQTT. Once event notification is sent from MinIO to MQTT, MQTT will send the event notification to subscribers, in this case Proxy application. Proxy application will receive a message containing an event notification from MinIO and forward it to Beanstalkd.
 
 
 \chapter{Implementation, experiments and assessment}
