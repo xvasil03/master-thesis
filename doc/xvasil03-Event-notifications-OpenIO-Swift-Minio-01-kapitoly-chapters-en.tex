@@ -606,7 +606,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
 
 \chapter{Solution draft}\label{chap:solution}
-    This chapter describes the current state of event notifications in OpenIO SDS, OpenStack Swift, and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in the form of middleware and for publishing events notification from MinIO to Beanstalkd in the form of an adapter.
+    This chapter describes the current state of event notifications in OpenIO SDS, OpenStack Swift, and MinIO. It describes proposed solutions for OpenIO SDS and OpenStack Swift in the form of middleware and for publishing events notification from MinIO to Beanstalkd in the form of an proxy application.
 \section{Current state}
     \subsection{OpenIO SDS}
     OpenIO Software-Defined storage has event-driven architecture, capable of publishing events to Beanstalkd using \textit{event-agent service} and \textit{Notify filter}.
@@ -767,7 +767,22 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \end{lstlisting}
 
 
-\section{Adapter for MinIO}
+\section{Proxy for MinIO}
+    MinIO has support for event notifications. The main problem is that it does not support Beanstalkd as an event notification destination. Since any change in MinIO source code could lead to incompatibility with future versions and with no support for custom applications/middlewares inside MinIO, the safest solution to publish event notifications from MinIO to Beanstalkd would be a proper proxy application.
+
+    The proposing proxy application would connect to some of the supported event notifications destinations (e.g., MQTT), subscribe to events coming from MinIO, and forward them to Beanstalkd.
+
+    \begin{figure}[hbt]
+        \centering
+        \includegraphics[width=1\textwidth]{obrazky-figures/minio-proxy.eps}
+        \caption{Sequence diagram of proxy application allowing publishing events from MinIO to Beanstalkd.}
+        \label{fig:minioProxy}
+    \end{figure}
+
+    Figure \ref{fig:minioProxy} shows a sequence diagram of the proposed proxy application for MQTT. The user configures MinIO event notifications using MinIO client or MinIO SDKs. Proxy application subscribes for MinIO messages in MQTT. Once event notification is sent from MinIO to MQTT, MQTT will send the event notification to subscribers, in this case Proxy application. Proxy application will receive a message containing an event notification from MinIO and forward it to Beanstalkd.
+
+
+
 \chapter{Implementation, experiments and assessment}
 
 \chapter{Conclusion}
