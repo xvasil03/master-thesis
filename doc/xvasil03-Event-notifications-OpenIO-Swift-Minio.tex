@@ -140,12 +140,12 @@
   supervisor.title.a={Ph.D.},    %titul za jménem (nepovinné) / title after the name (optional)
   % Klíčová slova / keywords
   keywords.cs={OpenIO Softwarově definované úložiště, Openstack Swift, MinIO, Beanstalk fronta, Monitorování událostí, Oznámení o událostech, Amazon S3 oznámení o události, Objektové úložiště}, % klíčová slova v českém či slovenském jazyce / keywords in czech or slovak language
-  keywords.en={OpenIO Software Defined Storage, Openstack Swift, MinIO, Beanstalk queue, Event monitoring, Event notification, Amazon S3 event notification, Object storage}, % klíčová slova v anglickém jazyce / keywords in english
+  keywords.en={OpenIO Software-Defined Storage, Openstack Swift, MinIO, Beanstalk queue, Event monitoring, Event notification, Amazon S3 event notification, Object storage}, % klíčová slova v anglickém jazyce / keywords in english
   %keywords.en={Here, individual keywords separated by commas will be written in English.},
   % Abstrakt / Abstract
   abstract.cs={
 
-    Cílem této práce je vytvořit software, který je schopen monitorovat a publikovat notifikace o události z Openstack Swift i z OpenIO Software Defined Storage (SDS) do fronty Beanstalk. Tato práce také navrhuje řešení pro publikování notifikaci o událostech z MinIO do fronty Beanstalk.
+    Cílem této práce je vytvořit software, který je schopen monitorovat a publikovat notifikace o události z Openstack Swift i z OpenIO Software-Defined Storage (SDS) do fronty Beanstalk. Tato práce také navrhuje řešení pro publikování notifikaci o událostech z MinIO do fronty Beanstalk.
 
     K dosažení tohoto cíle je navržen nový middleware, který lze spouštět uvnitř pipeline proxy serveru v OpenStack Swift a jako (filtr) součást asynchronní služby Event-Agent uvnitř OpenIO SDS. %Pro monitorování událostí uvnitř MinIO navrhovaným řešením je adaptér, který bude sbírat notifikace z cílů upozornění podporovaných MinIO (například Webhooks) a přeposílat je do fronty Beanstalk, protože MinIO neumožňuje vlastní middleware.
 
@@ -156,12 +156,12 @@
   abstract.en={
 
 
-    The goal of this thesis is to create software that is able to monitor and publish event notification from Openstack Swift as well as from OpenIO Software Defined Storage (SDS) to Beanstalk queue. This thesis also proposes solution for publishing event notifications from MinIO to Beanstalk queue.
+    The goal of this thesis is to create software that can monitor and publish event notifications from Openstack Swift and OpenIO Software-Defined Storage (SDS) to a Beanstalk queue. In addition, this thesis also proposes a solution for publishing event notifications from MinIO to a Beanstalk queue.
 
-    To accomplish this goal, new middleware is proposed that can be run inside pipeline of Proxy Server in OpenStack Swift and as (filter) part of asynchronous service Event-Agent inside OpenIO SDS.
-    %For event monitoring inside MinIO proposed solution is adapter, that will collect notifications from MinIO supported notification targets (for example Webhooks) and forward them to Beanstalk queue, since MinIO doesn't allow custom middlewares.
+    In order to accomplish this goal, new middleware is proposed that can be run inside a pipeline of Proxy Server in OpenStack Swift and as (filter) part of asynchronous service Event-Agent inside OpenIO SDS.
+    %For event monitoring inside MinIO proposed solution is an adapter that will collect notifications from MinIO supported notification targets (for example, Webhooks) and forward them to Beanstalk queue since MinIO does not allow custom middlewares.
 
-    Proposed middleware allows users to specify if they are interested in publishing event notifications for specific objects/containers using metadata. User can specify set of rules involing object properties, such as name (prefix, sufix, substring) and size, and only events satisfying those rules will be published.
+    Proposed middleware allows users to specify if they are interested in publishing event notifications for specific objects/containers using metadata. For example, users can specify a set of rules involving object properties, such as name (prefix, suffix, substring) and size, and only events satisfying those rules will be published.
 
     The contribution of this thesis is unique software capable of event monitoring from both OpenIO SDS and Openstack Swift.
   }, % abstrakt v anglickém jazyce / abstract in english
