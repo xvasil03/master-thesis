@@ -620,8 +620,8 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \subsection{OpenStack Swift}
     Currently, there is support for event publishing in OpenStack Swift. For example, there is no way to detect changes in a given container except by listing its content and comparing timestamps.
 
-    To partially solve this problem, OpenStack Swift created a specification of middleware that would send out notifications to users if a new object was created, metadata updated, or data has been deleted.
-    Two proposed solutions lacked a standard interface for event publishing (no support for either Amazon S3 or CloudEvents), which were not accepted and are outdated.
+    To partially solve this problem, OpenStack Swift created a specification\footnote{OpenStack Swift: Send notifications on PUT/POST/DELETE requests {\url{https://specs.openstack.org/openstack/swift-specs/specs/in_progress/notifications.html}}} of middleware that would send out notifications to users if a new object was created, metadata updated, or data has been deleted.
+    Two proposed solutions\cite{swiftPatch1}\cite{swiftPatch2} lacked a standard interface for event publishing (no support for either Amazon S3 or CloudEvents), which were not accepted and are outdated.
 
     \subsection{MinIO}
     MinIO supports event publishing in the form of \textit{Bucket notifications}. It can inform a user when an object is created, updated, or deleted. Besides events regarding objects, MinIO provides events notifications for replication events and evens regarding creating and deleting buckets. Furthermore, MinIO allows users to configure which events will be published using the Amazon S3 event notification structure.
@@ -646,14 +646,24 @@ This chapter introduces MinIO object storage, describes its key features, most e
     EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. This option could be beneficial when there are many reads from object storage, and publishing those events could significantly impact object storage performance. Therefore such event types can be disabled for whole object storage.
 
     Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configuration for publishing objects in a given container. Therefore the first step is to parse and validate such metadata. If the event notification configuration is not valid, then such configuration will be removed from metadata.
+
+    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, \texttt{EventNotification} middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
+
+    The figure \ref{fig:middlewareClassDiagram} shows simplified class diagram of EventNotification middleware. EventNotification defines \texttt{EventDestination} inteface , which simply sends created event notification to specified destination. This allow new types of event destination to be added easily in future. Class \texttt{EventNotification} is the core of middleware. Since access to metadata of upper level (container, account) does not have same interface for OpenStack Swift and OpenIO SDS, subclasses \texttt{Swift EventNotification} and \texttt{OpenIO EventNotification} were introduces to solve this problem.
+
     \begin{figure}[H]
         \centering
-        \includegraphics[width=0.8\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
+        \includegraphics[width=0.9\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
         \caption{Acitiviy diagram of EventNotification middleware.}
         \label{fig:middlewareActivity}
     \end{figure}
-    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, \texttt{EventNotification} middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
 
+    \begin{figure}[H]
+        \centering
+        \includegraphics[angle=90,height=0.96\textheight]{obrazky-figures/eventnotifications_class_diagram.eps}
+        \caption{Class diagram of EventNotification middleware.}
+        \label{fig:middlewareClassDiagram}
+    \end{figure}
 
 
     \subsection{Structure of published event}
