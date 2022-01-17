@@ -598,12 +598,40 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \subsection*{High availability}
     MinIO design allows a server to lose up to half its drivers and a cluster to lose up to half its servers, and MinIO will still be able to successfully process requests and serve objects. This is achieved by erasure code that protects data with redundancy\cite{minioIntel}.
 
-\section{Event notifications}
-    MinIO supports event notification for an event occurring to objects. MinIO provides Amazon S3 like events structure and API for defining which events will be published. Users can use the MinIO client or provided MinIO SDK API to set event configuration.
+    \section{Architecture}
+    MinIO is designed to be cloud-native object storage to be run in lightweight containers managed by external orchestration service such as Kubernetes. The entire server is ~40MB static binary and is highly effective in its use of CPU and memory resources. This allows co-hosting multiple numbers of tenants on shared hardware\cite{minioObjectStorage}.
 
-    Supported event notification targets are AMQP, Redis, MySQL, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks, and NSQ.
+    Usually, storages are built using multi-layer storage architecture, with a durable block layer at the bottom, a virtual file system in the middle layer, and multiple API gateways providing multiple protocols for emulating file, block, and object manipulation. The problem with this approach is that it has too many compromises\cite{minioIntel}.
+
+    MinIO decided on a completely different approach compared to other storage systems. Since MinIO's primary purpose is to serve only objects, it was built using \textbf{single-layer architecture} that provides all necessary functionalities without compromises. The advantage of this approach is object storage with high performance and lightweight\cite{minioIntel}.
+
+    In MinIO single-layer architecture, there is no such thing as Metadata server, but objects \textit{data and metadata are stored together}, which eliminates the need for a metadata database. In addition, MinIO performs all functions (erasure code, bitrot check, encryption) as inline, strictly consistent operations. This metadata design allows, in case of damage of an object, the damage can be healed/corrected for the individual object\cite{minioHighPerformance}.
+
+    Figure \ref{fig:minio-architecture} visualize MinIO cluster architecture. Each MinIO cluster is a collection of distributed MinIO servers attached to local drivers (JBOD/JBOF). Drivers are grouped into erasure sets and objects are stored into these sets using a hashing algorithm\cite{minioObjectStorage}.
+
+    \begin{figure}[H]
+        \centering
+        %\includegraphics[width=0.8\textwidth]{obrazky-figures/minio-architecture.eps}
+        \includegraphics[angle=90, height=0.75\textheight]{obrazky-figures/minio-architecture.eps}
+        \caption{Overview of MinIO cluster architecture (source: \cite{minioObjectStorage}, modified).}
+        \label{fig:minio-architecture}
+    \end{figure}
+    \newpage
+
+
+    \section{Event notifications}
+    MinIO supports event notification for an event occurring to objects. MinIO provides Amazon S3 like events structure and API for defining which events will be published. Administrators can define bucket-level notification rules using MinIO client or provided MinIO SDK API, around which S3 events and objects will MinIO publish event notifications. MinIO Lambda Notifications are built into the MinIO object storage service and only require access to the remote notification target \cite{minioMonitoring}.
+
+    Supported event notification targets are AMQP, Redis, MySQL, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks, and NSQ. Figure \ref{fig:minio-monitoring} provides an overview of events triggering and event publishing in MinIO.
 
     Beside events occred on objects such as \texttt{s3:ObjectCreated:*} and \texttt{s3:ObjectRemoved:*}, MinIO offers event notification for access to storage \texttt{s3:ObjectAccessed:*} and event notification when bucket is created \texttt{s3:BucketCreated} and deleted \texttt{s3:BucketRemoved}.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.96\textwidth]{obrazky-figures/minio-monitoring.eps}
+        \caption{Overview of event notification in MinIO storage (source: \cite{minioMonitoring}).}
+        \label{fig:minio-monitoring}
+    \end{figure}
 
 
 \chapter{Solution draft}\label{chap:solution}
@@ -654,7 +682,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \begin{figure}[H]
         \centering
         \includegraphics[width=0.9\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
-        \caption{Acitiviy diagram of EventNotification middleware.}
+        \caption{Activity diagram of EventNotification middleware.}
         \label{fig:middlewareActivity}
     \end{figure}
 
