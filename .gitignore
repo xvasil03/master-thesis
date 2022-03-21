@@ -2,3 +2,6 @@ doc/xvasil03-Event-notifications-OpenIO-Swift-Minio.*
 !xvasil03-Event-notifications-OpenIO-Swift-Minio-.*
 !xvasil03-Event-notifications-OpenIO-Swift-Minio.tex
 !xvasil03-Event-notifications-OpenIO-Swift-Minio.pdf
+fit-excel/excel-paper.*
+!fit-excel/excel-paper.tex
+!fit-excel/excel-paper.pdf
