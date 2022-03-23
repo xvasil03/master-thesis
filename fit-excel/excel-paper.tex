@@ -19,9 +19,9 @@
 %--------------------------------------------------------
 
 \hypersetup{
-	pdftitle={Paper Title},
-	pdfauthor={Author},
-	pdfkeywords={Keyword1, Keyword2, Keyword3}
+	pdftitle={ENOSS},
+	pdfauthor={Nemanja Vasiljević},
+	pdfkeywords={Event, Notifications, OpenStack Swift}
 }
 
 \lstset{
@@ -29,6 +29,7 @@
 	basicstyle=\footnotesize\tt,        % the size of the fonts that are used for the code
 }
 
+\definecolor{darkpastelred}{rgb}{0.76, 0.23, 0.13}
 \definecolor{codegray}{rgb}{0.5,0.5,0.5}
 \definecolor{codepurple}{rgb}{0.58,0,0.82}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
@@ -49,7 +50,13 @@
     showtabs=false,
     tabsize=2
 }
-
+\lstdefinestyle{jsonStyle}{
+    string=[s]{"}{"},
+    stringstyle=\color{darkpastelred},
+    comment=[l]{:},
+    breaklines=true,
+    commentstyle=\color{black}
+}
 
 %--------------------------------------------------------
 %--------------------------------------------------------
@@ -249,10 +256,7 @@ OpenStack Swift separates metadata into 3 categories based on their use:
 \textbf{\texttt{User Metadata}} - User metadata takes form \\
 \centerline{\texttt{X-<type>-Meta-<key>:<value>}}\\ where \texttt{<type>} represent resource type(i.e. account, container, object), and \texttt{<key>} and \texttt{<value>} are set by user. User metadata remain persistent until are updated using new value or removed using header \texttt{X-<type>-Meta-<key>} with no value or a header \texttt{X-Remove-<type>-Meta-<key>:<ignored-\\-value>}.
 
-\textbf{\texttt{System Metadata}} - System metadata takes form \texttt{X-<type>-Sysmeta-<key>:<value>}\\ where \texttt{<type>} represent resource type(i.e. account, container, object) and \texttt{<key>} and \texttt{<value>} are set by internal service in Swift WSGI Server.
-		All headers containing system metadata are deleted from a client request.
-
-		System metadata are visible only inside Swift, providing a means to store potentially sensitive information regarding Swift resources.
+\textbf{\texttt{System Metadata}} - System metadata takes form \texttt{X-<type>-Sysmeta-<key>:<value>}\\ where \texttt{<type>} represent resource type(i.e. account, container, object) and \texttt{<key>} and \texttt{<value>} are set by internal service in Swift WSGI Server. All headers containing system metadata are deleted from a client request. System metadata are visible only inside Swift, providing a means to store potentially sensitive information regarding Swift resources.
 
 \textbf{\texttt{Object Transient-Sysmeta}} - This type of metadata have form of \texttt{X-Object-Transient-\\-Sysmeta-<key>:<value>}. Transient-sysmeta has a similar behavior as system metadata and can be accessed only within Swift, and headers containing Transient-sysmeta are dropped. If middleware wants to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
 
@@ -273,13 +277,89 @@ Both attempts are outdated and due to lack of interest from users/operators Open
 
 %\textbf{[Our solution]} Make a quick outline of your approach -- pitch your solution.  The solution will be described later in detail, but give the reader a very quick overview now.
 
-\textbf{ENOSS} - my solution, code name ENOSS, satisfies all requirements specified in section \ref{introduction}. Key features are: events filtering, support of multiple destinations, AWS S3 compatibility, different event notification structure, definition of interfaces for future expansions and different filters, destinations and event notification structure, and design that allows its effortless expansions. %todo - maybe put it proposed solution? Table \cite{tbl:solutionsCmp} compares key features of existing solution and ENOSS.
+\textbf{ENOSS} - my solution, code name ENOSS, satisfies all requirements specified in section \ref{introduction}. Key features are: events filtering, support of multiple destinations, AWS S3 compatibility, different event notification structure, definition of interfaces for future expansions of filters, destinations and event notification structure, and design that allows its effortless expansions. %todo - maybe put it proposed solution? Table \cite{tbl:solutionsCmp} compares key features of existing solution and ENOSS.
 
 \section{ENOSS}
-
 %\textbf{[Contributions]} Sell your solution. Pinpoint your achievements. Be fair and objective.
 
-%\phony{Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer sit amet neque vel mi sodales interdum nec a mi. Aliquam eget turpis venenatis, tincidunt purus eget, euismod neque. Nulla et porta tortor, id lobortis turpis. Sed scelerisque sem eget ante interdum, vel volutpat arcu volutpat. Aliquam cursus, dolor a luctus. }
+ENOSS (Event Notifications in OpenStack Swift) is program that enables pubslishing notifications containing information about occured events in OpenStack Swift. It is implemented in form of Python WSGI middleware and is located in Proxy server pipeline. Since Proxy server communicates with external users, by placing ENOSS in its pipeline ENOSS is able to react on every request made by users to OpenStack Swift, which makes Proxy server ideal places for ENOSS.
+
+\subsection{Key featrues}
+The proposed middleware heavily utilizes containers/buckets and accounts metadata. Information specifying which event should be published and where is stored in metadata of upper level. For publishing events regarding objects, the configuration is stored in a container metadata and for container events, the configuration is stored in a account level.
+
+%multi users issue
+\textbf{Multi user environment} - since many different users communicate with OpenStack Swift each of them can be interested in different event notifications. ENOSS solve this problem by allowing each container and account to have their own notification configuration.
+
+%filtering issue
+\textbf{Event filtering} - one of the main requirements for event notifications is allowing users to specify for which events should notifications be publsihed - i.e. event filtering. ENOSS allows user to specify which types of events should be pubslished (object/continaer creation, deletion, access, etc.). ENOSS goes little bit futher and also allows users to specify rules that must be satisfied in order for event notification to be pubslished. Some of the rule operators are: object/container name prefix/suffix and object size. Using this feature user can select for example, only events regarding objects bigger then 50mb (operator: object size) or events regarding pictures (operator: object suffix).
+
+%destinations issue
+\textbf{Multiple destinations} - since event notifications has multiple applications, from monitoring to automatization, it is important that proposed solution is able to publish notification to multiple diferent destinations. ENOSS is fully capable of publishing event notifications to many different destinations (e.g. Beanstalkd quque, Kafka). In ENOSS, publishing notification about single event is not limited to only one destination, but, if user wishes, it can be pubslihed to  multiple different destination per single event. This feature allows event notification to be used for mutliple applications simulteniosly.
+
+\textbf{Event notification structure} - depending on application of event notification structure of notification may differ. ENOSS supports several different notification structures and using event notification configuration users are able to select type of event notification structure.
+
+\textbf{AWS S3 compatibility} - ENOSS puts big emphasis on support and compatibility with AWS S3. Structure of event configuration and event names in ENOSS are compatible with AWS S3. ENOSS also supports all filtering rules from AWS S3 and default event notification structure is compatible with AWS S3. This is all done in order to ease transfer users from AWS S3 to OpenStack Swift and using existing protocol, that is well documented, users will have easier time learning and using event notifications in OpenStack Swift.
+%security issue
+
+\subsection{Configuration}
+
+\textbf{Setting event notification configuration} - in order to enable event notifications on specific container, first step is to store its configuration. For this purpose ENOSS uses API: \\\centerline{\texttt{POST /v1/<acc>/<cont>?notification}}\\Figure \ref{fig:postConfiguration} describes process of storing event configuration. Authorized user sends event notification configuration using request body, ENOSS perform validation, if configuration is valid, ENOSS will store configuration to container system metadata, otherwise it will return unsuccessful HTTP code.
+
+\begin{figure}[t]
+		\centering
+		\includegraphics[width=0.90\linewidth]{images/swift-postconfiguration.pdf}
+		\caption{Process of setting event notification configuration in ENOSS.}
+		\label{fig:postConfiguration}
+\end{figure}
+
+\textbf{Reading stored event notification configuration} - Event notfication configuration can contain sensitive information. Since ENOSS uses stores configuration to storage using system matadata, which can be access only by application within OpenStack Swift, it disable reading stored configuration by simple GET/HEAD requests. For this purpose ENOSS offer API \\\centerline{\texttt{GET /v1/<acc>/<cont>?notification}}\\For security reasons, ENOSS allow only users with write rights to read stored configuration.
+
+\textbf{Configuration structure} - Listing \ref{lst:eventConfiguration} describes event notification configuration. \texttt{<Target>} represent targeted destination where event notifications will be sent (e.g., Beanstalkd, Elasticsearch). \texttt{<FilterKey>} is a unique name of a filter containing rules that must be satisfied in order to publish events.
+
+Event type takes form :\\\centerline{\texttt{s3:<Type><Action>:<Method>}}\\ and are compatible with Amazon S3 event types. Type represents resource type (object, bucket), action represent action preformed by user and can have values: \texttt{Created, Removed, Accessed}. The method represents the REST API method performed by a user: \texttt{Get, Put, Post, Delete, Copy, Head}. For example, if a new object was created, even type would be described as \texttt{s3:ObjectCreated:Put}. To match event type regardless of API method assign value \texttt{*} to \texttt{<Method>}.
+
+\begin{lstlisting}[style=jsonStyle, caption=Strucute of event notification configuration,    label=lst:eventConfiguration]
+{
+  "<Target>Configrations": [
+    {
+      "Id": "configration id",
+      "TargetParams": "set of key-value pairs, used specify dynamic parameters of targeted destination (e.g., name of beanstalkd tube or name of the index in Elasticsearch)",
+      "Events": "array of event types that will be published",
+      "PayloadStructure": "type of event notification structure: S3 or CloudEvents (default value S3)",
+      "Filter": {
+        "<FilterKey>": {
+          "FilterRules": [
+            {
+              "Name": "filter operations (i.e. prefix, sufix, size)",
+              "Value": "filter value"
+            }
+            ...
+          ]
+        }
+      }
+    }
+    ...
+  ]
+}
+\end{lstlisting}
+
+
+
+\subsection{Interfaces}
+
+\textbf{Destination} -
+
+\textbf{Payload} -
+
+\textbf{Filter Rule} -
+
+
+\textbf{Supported event types}
+
+
+\subsection{Performance}
+
+
 
 \section{Conclusions}
 \label{sec:Conclusions}
