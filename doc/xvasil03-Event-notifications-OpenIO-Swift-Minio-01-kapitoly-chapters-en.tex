@@ -769,7 +769,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
     Listing \ref{lst:eventConfiguration} describes event notification configuration. \texttt{<Target>} represent targeted destination where event notifications will be sent (e.g., Beanstalkd, Elasticsearch). \texttt{<FilterKey>} is a unique name of a filter containing rules that must be satisfied in order to publish events.
 
-    Even type takes form \texttt{s3:<Type><Action>:<Method>} and are compatible with Amazon S3 event types. Type represents resource type (object, bucket), action represent action preformed by user and can have values: \texttt{Created, Removed, Accessed}. The method represents the REST API method performed by a user: \texttt{Get, Put, Post, Delete, Copy, Head}. For example, if a new object was created, even type would be described as \texttt{\newline s3:ObjectCreated:Put}. To match event type regardless of API method assign value \texttt{*} to \texttt{<Method>}.
+    Event type takes form \texttt{s3:<Type><Action>:<Method>} and are compatible with Amazon S3 event types. Type represents resource type (object, bucket), action represent action preformed by user and can have values: \texttt{Created, Removed, Accessed}. The method represents the REST API method performed by a user: \texttt{Get, Put, Post, Delete, Copy, Head}. For example, if a new object was created, even type would be described as \texttt{\newline s3:ObjectCreated:Put}. To match event type regardless of API method assign value \texttt{*} to \texttt{<Method>}.
 
     \begin{minipage}{\linewidth}
     \begin{lstlisting}[style=jsonStyle, caption=Strucute of event notification configuration,    label=lst:eventConfiguration]
@@ -779,7 +779,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
           "Id": "configration id",
           "TargetParams": "set of key-value pairs, used specify dynamic parameters of targeted destination (e.g., name of beanstalkd tube or name of the index in Elasticsearch)",
           "Events": "array of event types that will be published",
-          "StructureType": "type of event notification structure: S3 or CloudEvents (default value S3)",
+          "PayloadStructure": "type of event notification structure: S3 or CloudEvents (default value S3)",
           "Filter": {
             "<FilterKey>": {
               "FilterRules": [
