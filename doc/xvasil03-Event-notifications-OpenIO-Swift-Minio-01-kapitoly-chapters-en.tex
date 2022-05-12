@@ -829,9 +829,9 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \subsection{Middleware}
     Central ENOSS component is middleware located in in source file \texttt{enoss/enoss.py}. Since WSGI middleware "wraps" incoming user request and OpenStack Swift response, all informations about user request (user ip address, headers, request body, etc) and Swift response (headers, body, HTTP code, etc) are avaliable to ENOSS.
 
-    ENOSS workflow can be divided into 4 logical stages:
-    \begin{itemize}
-        \item \textbf{Storing new notification configuration} - Before incoming user request is passed on to the Proxy server pipeline, ENOSS needs to determine if user is trying to store notification configuration to OpenStack Swift. In order to allow users to store new notification configuration ENOSS offers API \texttt{POST /<account>?notification} for enabling notifications on accounts level and \texttt{POST /<account>/<container>?notification} for enabling notifications on containers level, where body of such requests contains notification configuration. Storing notification configuration to object level is forbidden and on such user request ENOSS will return HTTP Forbidden (401).
+    ENOSS workflow can be divided into 6 logical stages:
+    \begin{enumerate}
+        \item \textbf{Storing new notification configuration} (fig. \ref{fig:enoss-stage1}) - Before incoming user request is passed on to the Proxy server pipeline, ENOSS needs to determine if user is trying to store notification configuration to OpenStack Swift. In order to allow users to store new notification configuration ENOSS offers API \texttt{POST /<account>?notification} for enabling notifications on accounts level and \texttt{POST /<account>/<container>?notification} for enabling notifications on containers level, where body of such requests contains notification configuration. Storing notification configuration to object level is forbidden and on such user request ENOSS will return HTTP Forbidden (401).
 
         If incoming user request fits specified API, ENOSS will read request body and check if contains valid notification configration. If body contains invalid configuration, ENOSS will return HTTP Bad Request (400), otherwise ENOSS will modify user request by storing notification configuration appropriate system metadata header - \texttt{"X-<type>-Sysmeta-notifications"} where \texttt{<type>} is either Account or Container. After this user request will be passed down to pipeline and in result ENOSS will receive Swift's response to users request.
 
@@ -839,19 +839,56 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
         ENOSS API uses HTTP POST method therefore Swift will store notification configuration only if user has write rights. This approach allows ENOSS to avoid ACL user checking and inforces that only users with write rights will be able to configure event notifications.
 
-        \item \textbf{Reading notification configurations of upper levels} - Swift processed user request and ENOSS received Swift response to the user request. This means that event occured in Swift and goal of this step is to get all notification configurations stored in upper level of hierarchy. Admin notification configuration is already avaliable (read during initialization of middleware) and remains to read configuration stored in account and/or container level.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1\textwidth]{obrazky-figures/enoss-stage1.pdf}
+            \caption{ENOSS middleware stage 1 - Storing new notification configuration.}
+            \label{fig:enoss-stage1}
+        \end{figure}
+
+        \item \textbf{Reading notification configurations of upper levels} (fig. \ref{fig:enoss-stage2}) - Swift processed user request and ENOSS received Swift response to the user request. This means that event occured in Swift and goal of this step is to get all notification configurations stored in upper level of hierarchy. Admin notification configuration is already avaliable (read during initialization of middleware) and remains to read configuration stored in account and/or container level.
 
         Proxy server uses per request cache - internaly called infocache, to which stores all metadata read from object storage during processing of user request. For reading informations(metadata) about containers and accounts Swift internally offers functions \texttt{get\_account\_info()} and \texttt{get\_container\_info()}. Those functions first check if wanted information is avaliable in infocache, then checks memcached(if its avaliable) and only then functions create another request to Swift for wanted informations.
 
         In this specific case, metadata of upper levels are avaliable in infocache, admin configuration is also avaliable and therefore ENOSS does not need to create additional request to object storage and reads configurations from fully cached data.
 
-        \item \textbf{Evaluate satisfied configurations} - For each notification configuration of upper level ENOSS needs to evaluate if event should be published. In this stage ENOSS checks if even type and filter rules are satisfied. In addition ENOSS checks if notification configuration allows publishing unsuccesful events (ENOSS by default publishes only unsuccesful events). It is important to note that some of filters might need information that is not currently avaliable(cached) which can result in additional request to object storage.
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1\textwidth]{obrazky-figures/enoss-stage2.pdf}
+            \caption{ENOSS middleware stage 2 - Reading notification configurations of upper levels.}
+            \label{fig:enoss-stage2}
+        \end{figure}
+
+        \item \textbf{Evaluate satisfied configurations} (fig. \ref{fig:enoss-stage3}) - For each notification configuration of upper level ENOSS needs to evaluate if event should be published. In this stage ENOSS checks if even type and filter rules are satisfied. In addition ENOSS checks if notification configuration allows publishing unsuccesful events (ENOSS by default publishes only unsuccesful events). It is important to note that some of filters might need information that is not currently avaliable(cached) which can result in additional request to object storage.
 
         Result of this stage are configurations for whom occured event satisfies all rules and filters.
-        \item \textbf{Creating notification payload} - In this stage, based on specified type of payload in notification configuration, ENOSS creates payload of notification for occured event. By default payload type is AWS S3 but user can specify other types. Similarly to previous stage, some informations might not avaliable in cache and additional request to object storage might occurs.
-        \item \textbf{Sending notification} - Notification payload was created and ENOSS will select proper destination to where notification will be sent. Target destination is specified in notification configuration which triggered notification.
-        \item \textbf{Reading stored configration} - In last stage ENOSS check if user request was targeted towards ENOSS, i.e. if user wanted to read stored notification configuration. For this purpose ENOSS offers API: \texttt{POST /<account>?notification} and \texttt{POST /<account>/<container>?notification}. If Swift responded successfully (HTTP 200) it means that user was successfully authorized to preform read operation and therefore ENOSS is "allowed" to send user asked information without worrying about security breach. ENOSS will read account/container metadata using swift functions \texttt{get\_account\_info()} or \texttt{get\_container\_info()} (similarly to stage 1) and extract notification configuration from system metadata. Extracted notification configuration will be stored into response body of user request.
-    \end{itemize}
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1\textwidth]{obrazky-figures/enoss-stage3.pdf}
+            \caption{ENOSS middleware stage 3 - Evaluation of satisfied configurations.}
+            \label{fig:enoss-stage3}
+        \end{figure}
+
+        \item \textbf{Creating notification payload} (fig. \ref{fig:enoss-stage4-5}) - In this stage, based on specified type of payload in notification configuration, ENOSS creates payload of notification for occured event. By default payload type is AWS S3 but user can specify other types. Similarly to previous stage, some informations might not avaliable in cache and additional request to object storage might occurs.
+        \item \textbf{Sending notification} (fig. \ref{fig:enoss-stage4-5}) - Notification payload was created and ENOSS will select proper destination to where notification will be sent. Target destination is specified in notification configuration which triggered notification.
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1\textwidth]{obrazky-figures/enoss-stage4-5.pdf}
+            \caption{ENOSS middleware stages 4 and 5 - Creating notification payload and sending notification to destination.}
+            \label{fig:enoss-stage4-5}
+        \end{figure}
+
+        \item \textbf{Reading stored configration} (fig. \ref{fig:enoss-stage6}) - In last stage ENOSS check if user request was targeted towards ENOSS, i.e. if user wanted to read stored notification configuration. For this purpose ENOSS offers API: \texttt{POST /<account>?notification} and \texttt{POST /<account>/<container>?notification}. If Swift responded successfully (HTTP 200) it means that user was successfully authorized to preform read operation and therefore ENOSS is "allowed" to send user asked information without worrying about security breach. ENOSS will read account/container metadata using swift functions \texttt{get\_account\_info()} or \texttt{get\_container\_info()} (similarly to stage 1) and extract notification configuration from system metadata. Extracted notification configuration will be stored into response body of user request.
+
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=1\textwidth]{obrazky-figures/enoss-stage6.pdf}
+            \caption{ENOSS middleware stages 6 - Reading stored configration.}
+            \label{fig:enoss-stage6}
+        \end{figure}
+    \end{enumerate}
 
     \textbf{Configuration} - during runtime process middleware needs to validate new notification configurations, create different types of notification payloads, and send notifications to various destinations. In order to do so, middleware needs informations about avaliable destinations and destination connection configurations. Furthermore middleware needs information about avaliable payloads types as well as information about validation process of new notification configuration. Since ENOSS allows Swift admins to publish notifications, therefore needs access to admins notification configuration.
 
@@ -980,8 +1017,30 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
         \item \textbf{KafkaDestination} - desintation to Apache Kafka distributed event streaming platform is implemented using Kafka Python client library \footnote{Kafka Python client \url{https://github.com/dpkp/kafka-python}}. Library provides high-level asynchronous message producer - \textbf{\texttt{KafkaProducer}}. Similarly to \texttt{BeanstalkdDestination}, \texttt{KafkaDestination} reads server configuration from destination configuration file and reads name of Kafka topic to which notifications will be published. Before sendning notification, \texttt{KafkaDestination} transofrms notification from dict to bytes datatype and then sends it using KafkaProducer instance.
 
-        \item \textbf{ElasticsearchDestination} - destination to Elasticsearch search engine uses official Python Client library \footnote{Elasticsearch Python Client \url{https://www.elastic.co/guide/en/elasticsearch/client/python-api/current/index.html}}. \texttt{ElasticsearchDestination} supports HTTPS connection to Elasticsearch server. Durining initialization phase, \texttt{ElasticsearchDestination} reads server connection configration from destination configration file and creates connection to Elasticsearch. After creation of connection, \texttt{ElasticsearchDestination} will ping Elasticsearch server in order to verify that connection was successful, if not, exception will be raised and Proxy server will not be initalized. Information about targeted index and index mapping is also read from configration. After successful ping to Elasticsearch server, \texttt{ElasticsearchDestination} will check if targeted index exist. If it does not exist, index will be created with specified index mapping(optional). In order to send notification to Elasticsearch server, \texttt{ElasticsearchDestination} transforms notification to string and uses Elasticsearch Index API with specified index name. 
+        \item \textbf{ElasticsearchDestination} - destination to Elasticsearch search engine uses official Python Client library \footnote{Elasticsearch Python Client \url{https://www.elastic.co/guide/en/elasticsearch/client/python-api/current/index.html}}. \texttt{ElasticsearchDestination} supports HTTPS connection to Elasticsearch server. Durining initialization phase, \texttt{ElasticsearchDestination} reads server connection configration from destination configration file and creates connection to Elasticsearch. After creation of connection, \texttt{ElasticsearchDestination} will ping Elasticsearch server in order to verify that connection was successful, if not, exception will be raised and Proxy server will not be initalized. Information about targeted index and index mapping is also read from configration. After successful ping to Elasticsearch server, \texttt{ElasticsearchDestination} will check if targeted index exist. If it does not exist, index will be created with specified index mapping(optional). In order to send notification to Elasticsearch server, \texttt{ElasticsearchDestination} transforms notification to string and uses Elasticsearch Index API with specified index name.
     \end{itemize}
+
+    \subsection{Custom filters/payloads/destinations}
+
+    Classes that implement individual rules, payloads and destinations can be interpreted as \textbf{handlers} that handle/preform specific jobs - create notification payload, preform event filtering or send notification to desired destination. Each type of handlers has their own module, filter rule handlers are located in module \texttt{enoss/filter\_rules}, payload handlers in \texttt{enoss/payloads} and destination handlers in \texttt{enoss/destination}.
+
+    ENOSS middleware imports handlers from specified modules, therefore all handler classes must be imported in \texttt{\_\_init\_\_.py} of specified modules. In order for ENOSS middleware to assign jobs to proper handlers, ENOSS defines following rules:
+    \begin{itemize}
+        \item Handlers must implement/use predefined handler interfaces. In case of filter rules that is \texttt{RuleI}, for payload creation \texttt{PayloadI} and for sending notification to specific destination handler class must implement interface \texttt{DestinationI}.
+        \item Handlers name must be in format \textbf{\texttt{<Type><Handler suffix>}}, where handler suffix represents type of job that handler preforms. In particular, for payload creation handler suffix is \texttt{Payload}, for filter rules \texttt{Rule} and for sending notification to desired destination handler suffix is \texttt{Destination}. \texttt{<Type>} must corespond with type of individual filter rule/payload/destination that handler preforms, and is used by ENOSS during handler selection process.
+        \item All handlers must be imported in \texttt{\_\_init\_\_.py} file of specified handler module.
+    \end{itemize}
+
+    \textbf{Handler selection} - durring initialization phase, ENOSS middleware will load all avaliable handlers and separate them based on type of job that handlers preform. ENOSS expects that names of handlers match values in notification configuration. Figure \ref{fig:fig:enoss-handler-selection} ilustrates handler section process and how names in notification configuration are connected to specific handlers. For example, if user specifies that notification payload is "s3", ENOSS will select handler \texttt{S3Payload} from module \texttt{enoss/payloads}. Same principle is applied to filter rules and destinatnions. It is important to notice that loaded handlers are used during validation process of new notification configurations, and if handler cannot be found, ENOSS will declade notification configuration as invalid.
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=1\textwidth]{obrazky-figures/enoss-handler-selection.pdf}
+        \caption{Process of handler selection for given notification configuration.}
+        \label{fig:enoss-handler-selection}
+    \end{figure}
+
+    \textbf{Creation of custom filters/payloads/destinations} can be interpreted as creation of new handler and its process is simple and intuitive. New handler must follow rules specified above(interface, name and location). Once new handler is implemented and imported in proper module, custom filter/payload/destination can be used in notification configuration using handler selection described above.
 
     \subsection{OpenIO SDS compatibility}
     \textcolor{gray}{\blindtext}
