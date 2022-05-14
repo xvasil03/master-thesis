@@ -42,6 +42,16 @@
     tabsize=2
 }
 
+\newenvironment{customlegend}[1][]{%
+    \begingroup
+    \csname pgfplots@init@cleared@structures\endcsname
+    \pgfplotsset{#1}%
+}{%
+    \csname pgfplots@createlegend\endcsname
+    \endgroup
+}%
+\def\addlegendimage{\csname pgfplots@addlegendimage\endcsname}
+
 \hyphenation{OpenStack Swift OpenIO SDS}
 
 \chapter{Introduction}\label{chap:introduction}
@@ -826,7 +836,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 \section{ENOSS}
     ENOSS (Event notifications in OpenStack Swift) is implemented in form of Python WSGI middleware and is located in Proxy server pipeline. ENOSS is implemented using flake8 coding style with the OpenStack hacking module.
 
-    \subsection{Middleware}
+    \subsection{Middleware}\label{sec:enoss-swift-section}
     Central ENOSS component is middleware located in in source file \texttt{enoss/enoss.py}. Since WSGI middleware "wraps" incoming user request and OpenStack Swift response, all informations about user request (user ip address, headers, request body, etc) and Swift response (headers, body, HTTP code, etc) are avaliable to ENOSS.
 
     ENOSS workflow can be divided into 6 logical stages:
@@ -1031,7 +1041,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
         \item All handlers must be imported in \texttt{\_\_init\_\_.py} file of specified handler module.
     \end{itemize}
 
-    \textbf{Handler selection} - durring initialization phase, ENOSS middleware will load all avaliable handlers and separate them based on type of job that handlers preform. ENOSS expects that names of handlers match values in notification configuration. Figure \ref{fig:fig:enoss-handler-selection} ilustrates handler section process and how names in notification configuration are connected to specific handlers. For example, if user specifies that notification payload is "s3", ENOSS will select handler \texttt{S3Payload} from module \texttt{enoss/payloads}. Same principle is applied to filter rules and destinatnions. It is important to notice that loaded handlers are used during validation process of new notification configurations, and if handler cannot be found, ENOSS will declade notification configuration as invalid.
+    \textbf{Handler selection} - durring initialization phase, ENOSS middleware will load all avaliable handlers and separate them based on type of job that handlers preform. ENOSS expects that names of handlers match values in notification configuration. Figure \ref{fig:enoss-handler-selection} ilustrates handler section process and how names in notification configuration are connected to specific handlers. For example, if user specifies that notification payload is "s3", ENOSS will select handler \texttt{S3Payload} from module \texttt{enoss/payloads}. Same principle is applied to filter rules and destinatnions. It is important to notice that loaded handlers are used during validation process of new notification configurations, and if handler cannot be found, ENOSS will declade notification configuration as invalid.
 
     \begin{figure}[H]
         \centering
@@ -1057,42 +1067,440 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \textcolor{gray}{\blindtext}
 
 
-\chapter{Testing and experiments}
-    \textcolor{gray}{\blindtext}
+\chapter{Testing, experiments and possible applications}
+    This chapter describes process of testing of ENOSS middleware in order to determine whether ENOSS behavior matches its specification. This process is done using two types of tests: \textbf{unit} and \textbf{functional} tests. Furthermore, this chapter explain process of benchmarking, analyzes ENOSS latency for each stage, provides information about benchmark scenarios and compares performance between different types of destinations.
 
-\section{Unit and functional tests}
-    \textcolor{gray}{\blindtext}
+\section{Testing}
+    OpenStack Swift project provides three different types of tests: unit, functional and probe tests. First two types(unit and functional tests) are used to verify ENOSS correct behavior, while probe tests are not used since they are designed to test much of Swift's internal processes.
+    Tests in OpenStack Swift are standardize and automated using TOX automation project\footnote{tox automation project {\url{https://tox.wiki/en/latest/}}}.
 
-    \textcolor{gray}{\blindtext}
+    \subsection{Unit tests}
+    Swift's unit tests are designed to test small parts of the code in isolation \cite{swiftContributing123}. Unit tests check that small selection of the code is behaving correctly. Unit tests are implemented in Python using \textbf{\texttt{unittest}} framework. ENOSS unit test is located in \texttt{test/unit/common/middleware/test\_enoss.py}.
 
-    \textcolor{gray}{\blindtext}
+    Since goal of unit tests is testing in isolation, any communication with external services should be excluded. In order to achive this, all destination handlers are replaced with mock handler \textbf{\texttt{MockDestination}}(listing \ref{lst:swift-mockdst}) using \texttt{unittest.mock.patch} decorator.
 
-    \textcolor{gray}{\blindtext}
-\section{Benchmark}
-    \textcolor{gray}{\blindtext}
+    \begin{lstlisting}[language=Python, style=pythonStyle, caption=Mock class used to replace destination handlers in unit tests, label=lst:swift-mockdst]
+    class MockDestination(object):
+        def __init__(self, conf):
+            self.reset()
 
-    \subsection{Work flow analysis}
-    \textcolor{gray}{\blindtext}
+        def reset(self):
+            self.state = 'notification not sent'
 
-    \textcolor{gray}{\blindtext}
+        def send_notification(self, notification):
+            self.state = 'notification sent'
+    \end{lstlisting}
 
-    \subsection{Stress tests}
-    \textcolor{gray}{\blindtext}
+    ENOSS unit test contains:
+    \begin{enumerate}
+        \item \textbf{Initalization test} - checks if ENOSS can be initalized.
+        \item \textbf{Handlers interface test} - checks if all avaliable handler classes implements specified interfaces.
+        \item \textbf{Configuration validation tests} - checks if notification configuration test is behaving correctly. It uses various different types of invalid configurations(unsupported event type, payload, destination, missing filter rule value, etc.) to verify correct validation process.
+        \item \textbf{New valid notification configuration} - simulates user trying to store new valid notification configuration to Swift using ENOSS API. Test checks if new notification configration is stored into system metadata.
+        \item \textbf{New invalid notification configuration} - simulates user trying to store new invalid notification configuration to Swift using ENOSS API. Test checks if return response from ENOSS is HTTP Bad request.
+        \item \textbf{Reading stored notification configuration} - user wants to read notification configuration, which is stored in system metadata. Test check is Swift response body contains notification configuration.
+        \item \textbf{Invoke notification from containers level} - notification configuration is stored in container level and event occures in objects level. Test checks if notification is sent to Beanstalk queue using mocked handler \texttt{MockDestination}.
+        \item \textbf{Invoke notification from account level} - notification configuration is stored in container level and event occures in containers level. Test checks if notification is sent to Beanstalk queue using mocked handler \texttt{MockDestination}.
+    \end{enumerate}
 
-    \textcolor{gray}{\blindtext}
+    \subsection{Functional tests}
+    The functional Swift's tests are designed to validate that entire Swift system is working correctly from external perspective (they are "black-box" tests). In ENOSS testing context, functional tests are run against public Swift(and ENOSS) API endpoints. ENOSS functional test is located in \texttt{test/functional/test\_enoss.py}.
 
-    \textcolor{gray}{\blindtext}
+    Similarly to unit tests, functional tests are implemented using \texttt{unittest} module. ENOSS functional test contains:
+    \begin{enumerate}
+        \item \textbf{Storing new notification configuration} - sends to Swift ENOSS API requst with new valid notification configuration and then checks if notification configuration is stored using additional request to Swift (using ENOSS GET API).
+        \item \textbf{Deleting existing notification configuration} - deletes stored notification configuration and check if notification configuration is indeed deleted using same principle as previous test.
+        \item \textbf{Storing invalid notification configuration} - sends to Swift ENOSS API request with invalid notification configuration, checks if Swift(ENOSS) response with HTTP Bad request and checks that notification configuration was not stored in Swift.
+        \item \textbf{ALC test for reading stored notification configuration} - simulates unathorized user trying to read stored notification without read rights. Excpects HTTP Unathorized response from Swift. Then same process does for authrozed user, where test expects that user will receive notification configuration in Swift's response body.
+        \item \textbf{ALC test for storing new notification configuration} - simulates unathorized user trying to store new notification configuration without write rights. Excpects HTTP Unathorized response from Swift. Then same process does for authrozed user, where test expects that notification configuration will be successfully stored.
+    \end{enumerate}
+\section{Performance}
+    As described in subsection \ref{sec:enoss-swift-section}, ENOSS can be divided into 6 logical stages. In order to understand how to measure ENOSS performance, first analysis of each logical stage is needed. The analysis mainly consist of determing whether ENOSS has all needed informations to preform tasks in a stage. If not, where ENOSS can obtain such information and how long would approximatly take for ENOSS to obtain or preform given task.
 
-    \textcolor{gray}{\blindtext}
+    Analysis of stages:
 
-    \textcolor{gray}{\blindtext}
+    \begin{enumerate}
+        \item \textbf{Storing new notification configuration} - information about new notification configuration is avaliable in users request. ENOSS will either return HTTP Bad Request (if configuration is invalid) or copy configuration to system metadata of request. Therefore ENOSS preforms this stage extremely fast and no performance issue can occure in this stage.
+        \item \textbf{Reading notification configurations of upper levels} - while Swift process incoming request, informations about account and container are read from storage and then stored in infocache. ENOSS has access to infocache and will read configurations from infocache. Therefore, no performance issues can occure in this stage aswell.
+        \item \textbf{Evaluate satisfied configurations} - in this stage ENOSS preforms event filtering based on stored notification configuration obtained in previous stage. Some filter rules might need information that is not currently cached and avaliable. For example, updating objects metadata is done using POST API method. In this case, object size is not avaliable neither in incoming request headers, Swift response headers nor in infocache. If notification configuration contains object size filter, ENOSS will obtain needed information using additional request to object storage, which can cause addition latency.
+        \item \textbf{Creating notification payload} - similarly to previous stage, in order to create notification payload, ENOSS might need information that is not cached and to obtain such information ENOSS will have to make additional request to object storage.
+        \item \textbf{Sending notification} - in this stage ENOSS sends notification to specified destination using third-party libraries. Speed in which this task is preformed depends on type of connection with destination (HTTP/HTTPS), type of destination, whether sending notification is synchronous or asynchronous.
+        \item \textbf{Reading stored configration} - similarly to first stage, information about stored notification is avaliable in infocache, ENOSS will simply copy configuration to response body. Therefore no performance issues can occure in this stage.
+    \end{enumerate}
 
-    \textcolor{gray}{\blindtext}
+    Additionaly, performace issue can occure durring \texttt{DELETE} events. Since ENOSS creates event notifications after event occures, ENOSS needs to obtain information before it is deleted from object storage.
 
-    \subsection{Assertion}
-    \textcolor{gray}{\blindtext}
+    In case that ENOSS needs to obtain information from object storage, such information will be saved into infocache. This result in \textbf{maximum one additional request} to object storage per users request.
 
-    \textcolor{gray}{\blindtext}
+    Therefore, computing ENOSS latency can be defined as:
+    \texttt{\[ENOSS\_latency = time(obtaining\_needed\_information) + time(sending\_notification)\]}
+    where obtainting needed information in best scenario can be fully from cached data, or in worst scenarion can result in \textbf{maximum one additional request} to object storage.
+
+    \subsection{Benchmark}
+    Benchmarking was carried out on FIT VUT university kubernetes cluster. Each supported destination(Beanstalkd, Kafka, Elasticsearch) was created as kubernetes pod and service. OpenStack Swift was deployed using Nvidia dockerfile for OpenStack Swift AIO(All in One), where Proxy, Account, Container and Object servers are located on same machine. OpenStack Swift pod were configured to have 16 VCPU (CPU Model: AMD EPYC 7282), 16Gb RAM memory, and 50Gb disk storage.
+
+    Since goal is to benchmark ENOSS middleware, which is located in Proxy server, Proxy server was configured to have only one worker in order to saturate Proxy server CPU. In order to avoid bottle neck on other servers, 4 workers were assigned(12 in total) to each of other servers(Account, Container and Object servers).
+
+    Benchmarking process is done using benchmark tool \textbf{\texttt{ssbench}}, designed by SwiftStack(Nvidia) for OpenStack Swift object storage system. \texttt{ssbench} has two main components - \textbf{ssbench-master} and \textbf{ssbench-worker}. Master component is in charge of creating and distributing benchmark jobs, while workers preforms received jobs. Benchmark test is defined using \textbf{scenarion}(sometimes called a “CRUD scenario”), which is JSON-formatted file. Scenario contains following informations \cite{swiftSsbench}:
+    \begin{itemize}
+        \item \textbf{name} - scenarios name
+        \item \textbf{sizes} - list of "object size" classes. Each object size classes has name, minimum and maximum size of objects in bytes.
+        \item \textbf{initia\_files} - dictionary of initial file-counts per size class. Defines probability distribution of object sizes during benchmark run itself.
+        \item \textbf{run\_seconds} - number of seconds the benchmark scenario should be run.
+        \item \textbf{container\_count} - number of containers in Swift used during benchmark run.
+        \item \textbf{user\_count} - determines the maximum client concurrency during the benchmark run.
+        \item \textbf{crud\_profile} - determines the distribution of each kind of CRUD operations.
+    \end{itemize}
+
+    \begin{lstlisting}[style=jsonStyle, caption=Example ssbench scenario.]
+    {
+        "name": "Small test scenario",
+        "sizes": [{
+            "name": "tiny",
+            "size_min": 4096,
+            "size_max": 65536
+          }, {
+            "name": "small",
+            "size_min": 100000,
+            "size_max": 200000
+        }],
+        "initial_files": {
+            "tiny": 100,
+            "small": 10
+        },
+        "run_seconds": 300,
+        "crud_profile": [3, 4, 2, 2],
+    }
+    \end{lstlisting}
+
+    All experiments were done using one ssbench master and 5 ssbench workers. During benchmarking information about CPU and RAM usage used by Proxy server worker were tracked. Coneections to Beanstalkd and Kafka queue are done without authorization and using unsecure connection, while connection with Elasticsearch is made using TLS/HTTPS connection using CA certificate.
+
+    \textbf{Experiment 1}: in order to fully saturate proxy CPU and avoid disk bottleneck, for this experiment ssbench scenario contains only tiny documents(size 4-6KB) and only read operations. This way data will be serviced entirely from the buffer cache and disk bottleneck will be avoided. In this benchmark test, ENOSS is configure, using admin notification configuration, to create and send notifications for all events to one destination during benchmark test. In this scenario ENOSS have all needed information(in infocache) and does not need to make addition requests to object storage.
+
+    Benchmark test is repeated for each supported destination, as well as when notification configuration is not enabled and when ENOSS is enabled in Proxy server. Each benchmark test during this experiment were run 60 minutes.
+
+    Figure \ref{fig:expr1-usage} contains information about used CPU and RAM by Proxy server worker(where ENOSS is located). In all cases CPU usage was saturated and maximum output from Proxy server was achieved. Using inforamtion about RAM usage, conclusion can drawn that when ENOSS is enabled, Proxy server worker will use about 20MB more RAM memory for this hardware configuration.
+
+    Table \ref{tab:expr1} contains benchmark results for this experiment. First row(\textbf{ENOSS disabled}) in table shows results when ENOSS is not enabled in Proxy server pipeline. Second row(\textbf{No notifications}) contains benchmark results when ENOSS is enabled, but wasn't configured to publish any notification. Other rows show results when ENOSS is enabled and configured to publish notification to specified destination.
+
+    When ENOSS is enabled but is not configured to publish notificiations, ENOSS middleware still need to read notification configurations of upper levels(stage 2 described in subsection \ref{sec:enoss-swift-section}). Since theres no notification configurations in upper levels, ENOSS will simply return Swift response. Latency of this example can be interpreted as latency of second stage. Comparing average latency when ENOSS is not enabled and when ENOSS is enabled but does not publish notifications, statement that no performance issues can occur durring reading notification configurations of upper levels is confirmed.
+
+    Comparing results of each supported destination, conclusion can be drawn that beanstalkd queue outperforms Kafka queue, while Elasticsearch has worst performace, partially due HTTPS connection. Comparing results when ENOSS publishes notifications and when ENOSS is not enabled, latency of publishing notifications can be computed.
+
+    In this experiment, when ENOSS had all needed information cached, ENOSS at average took between 0.04(beanstalkd) and 0.16 seconds to publish notification.
+
+    \begin{figure}[!htb]
+        \centering
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=CPU usage(\%),
+                ymin=50,
+                ymax=100,
+                mark=none,
+                every axis plot/.append style={thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=cpu] {benchmark_results/expr1/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=cpu] {benchmark_results/expr1/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=cpu] {benchmark_results/expr1/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=cpu] {benchmark_results/expr1/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=cpu] {benchmark_results/expr1/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=RAM(MB),
+                ymin=0,
+                ylabel near ticks,
+                yticklabel pos=right,
+                mark=none,
+                every axis plot/.append style={ultra thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=ram] {benchmark_results/expr1/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=ram] {benchmark_results/expr1/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=ram] {benchmark_results/expr1/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=ram] {benchmark_results/expr1/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=ram] {benchmark_results/expr1/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}
+        \begin{customlegend}[legend columns=3,legend style={column sep=2ex},
+                legend entries={Beanstalkd ,
+                                Elasticsearch ,
+                                Kafka ,
+                                No notifications ,
+                                ENOSS disabled,
+                                }]
+                \addlegendimage{no markers, line width = 2px, blue}
+                \addlegendimage{no markers, line width = 2px, red}
+                \addlegendimage{no markers, line width = 2px, green}
+                \addlegendimage{no markers, line width = 2px, purple}
+                \addlegendimage{no markers, line width = 2px, brown}
+                \end{customlegend}
+        \end{tikzpicture}
+        \caption{Left: CPU usage by Proxy server worker during experiment 1. Right: RAM usage by Proxy server worker during experiment 1.} \label{fig:expr1-usage}
+    \end{figure}
+
+    \begin{center}
+    \begin{table}[!htb]
+        \begin{tabular}{|c|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{*}{Destination} & \multirow{2}{*}{\shortstack[c]{Requests\\ count}} & \multirow{2}{*}{\shortstack[c]{Requests\\ per sec}} &\multicolumn{5}{c|}{Latency(seconds)}\\
+        \cline{4-8}
+        & & & min & max & std dev & 95\%-idle & avg \\
+        \hline
+        ENOSS disabled & 1 328 729 & 369 & 0.003 & 0.926 & 0.016 & 0.026 & 0.018\\
+        \hline
+        No notifications & 1 159 416 & 322 & 0.003 & 1.138 & 0.018 & 0.030 & 0.021 \\
+        \hline
+        Beanstalkd & 1 140 780 & 316 & 0.003 & 0.861 & 0.015 & 0.031 & 0.022 \\
+        \hline
+        Apache Kafka & 916 787 & 254 & 0.004 & 0.953 & 0.017 & 0.039 & 0.027 \\
+        \hline
+        Elasticsearch(https) & 722 446 & 200 & 0.009 & 8.990 & 0.021 & 0.048 & 0.034 \\
+        \hline
+        \end{tabular}
+        \caption{\label{tab:expr1}Benchmark results for experiment 1.}
+    \end{table}
+    \end{center}
+
+    \textbf{Experiment 2}: similarly to experiment 1, ssbench scenarion contains only tiny documents and ENOSS is configured to create notification configuration for all events to one destination per event. This experiments target situations when ENOSS does not have all needed information and needs to create additional request to object storage.
+
+    Figure \ref{fig:expr2-usage} contains information about used CPU and RAM by Proxy server worker. Comparing CPU and RAM usage durring this experiment with usage of previous experiment, conclusion can be draw that CPU and RAM usage remained same and that ENOSS did not need more RAM memory in order to gather needed informations from object storage.
+
+    From table \ref{tab:expr2}, containing benchmark results for Experiment 2, deduction can be made that making addiitonal request to object storage has impact on latency. As expected, worst performace occured when ENOSS published notifications to Elasticsearch, while Beanstalkd outperforms Kafka queue, same as in previous experiment.
+
+    \begin{figure}[!htb]
+        \centering
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=CPU usage(\%),
+                ymin=50,
+                ymax=100,
+                mark=none,
+                every axis plot/.append style={thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=cpu] {benchmark_results/expr2/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=cpu] {benchmark_results/expr2/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=cpu] {benchmark_results/expr2/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=cpu] {benchmark_results/expr1/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=cpu] {benchmark_results/expr1/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=RAM(MB),
+                ymin=0,
+                ylabel near ticks,
+                yticklabel pos=right,
+                mark=none,
+                every axis plot/.append style={ultra thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=ram] {benchmark_results/expr2/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=ram] {benchmark_results/expr2/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=ram] {benchmark_results/expr2/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=ram] {benchmark_results/expr1/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=ram] {benchmark_results/expr1/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}
+        \begin{customlegend}[legend columns=3,legend style={column sep=2ex},
+                legend entries={Beanstalkd ,
+                                Elasticsearch ,
+                                Kafka ,
+                                No notifications ,
+                                ENOSS disabled,
+                                }]
+                \addlegendimage{no markers, line width = 2px, blue}
+                \addlegendimage{no markers, line width = 2px, red}
+                \addlegendimage{no markers, line width = 2px, green}
+                \addlegendimage{no markers, line width = 2px, purple}
+                \addlegendimage{no markers, line width = 2px, brown}
+                \end{customlegend}
+        \end{tikzpicture}
+        \caption{Left: CPU usage by Proxy server worker during experiment 2. Right: RAM usage by Proxy server worker during experiment 3.} \label{fig:expr2-usage}
+    \end{figure}
+
+    \begin{center}
+    \begin{table}[!htb]
+        \begin{tabular}{|c|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{*}{Destination} & \multirow{2}{*}{\shortstack[c]{Requests\\ count}} & \multirow{2}{*}{\shortstack[c]{Requests\\ per sec}} &\multicolumn{5}{c|}{Latency(seconds)}\\
+        \cline{4-8}
+        & & & min & max & std dev & 95\%-idle & avg \\
+        \hline
+        ENOSS disabled & 1 328 729 & 369 & 0.003 & 0.926 & 0.016 & 0.026 & 0.018\\
+        \hline
+        No notifications & 1 159 416 & 322 & 0.003 & 1.138 & 0.018 & 0.030 & 0.021 \\
+        \hline
+        Beanstalkd & 732 845 & 203 & 0.006 & 0.638 & 0.016 & 0.046 & 0.034 \\
+        \hline
+        Apache Kafka & 570 528  & 158 & 0.007 & 0.909 & 0.018 & 0.056 & 0.043 \\
+        \hline
+        Elasticsearch(https) & 498 556 & 138 & 0.011 & 0.870 & 0.023 & 0.069 & 0.050 \\
+        \hline
+        \end{tabular}
+        \caption{\label{tab:expr2}Benchmark results for experiment 2.}
+    \end{table}
+    \end{center}
+
+    \textbf{Experiment 3}: this experiment aims to simulate real-life usage of OpenStack Swift object storage. Scenario contains tiny(1-10KB), small(100KB) and medium(1MB) objects, CRUD operations distribution is 36\% create, 27 \% read, 18\% update and 18\% delete, where 52\% of operations were with tiny objects, 35\% with small and 13\% with medium objects. Duration of each benchmark test during this experiment is 30 minutes.
+
+    In figure \ref{fig:expr3-usage} can be seen that no CPU saturation was achieved since scenarion involves bigger object and non-read operations which led to disks(and other components) bottlenecks. From figure \ref{fig:expr3-usage} can be also seen in benchmark tests when ENOSS was enabled CPU usage was increased. Computing(and then comparing) average CPU usage during different benchmark tests in this experiment was discovered that CPU usage increases from 10 to 13\% when ENOSS is enabled.
+
+    Table \ref{fig:expr3-results} contains informations about benchmark results for this experiment.
+
+    In table \ref{tab:expr3} can be seen that latency trend is similar with other experiments. Beanstalkd shows best performance and outperforms Kafka queue, while Elasticsearch is on last place.
+
+    \begin{figure}[h]
+        \centering
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=CPU usage(\%),
+                ymin=0,
+                ymax=100,
+                mark=none,
+                every axis plot/.append style={thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=cpu] {benchmark_results/expr3/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=cpu] {benchmark_results/expr3/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=cpu] {benchmark_results/expr3/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=cpu] {benchmark_results/expr3/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=cpu] {benchmark_results/expr3/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}[scale=0.9]
+            \begin{axis}[
+                xlabel=time(min),
+                ylabel=RAM(MB),
+                ymin=0,
+                ylabel near ticks,
+                yticklabel pos=right,
+                mark=none,
+                every axis plot/.append style={ultra thick}
+            ]
+            \addplot [no markers, blue] table [x=row, y=ram] {benchmark_results/expr3/usage_beanstalkd_agg.csv};
+            \addplot [no markers, red] table [x=row, y=ram] {benchmark_results/expr3/usage_elasticsearch_agg.csv};
+            \addplot [no markers, green] table [x=row, y=ram] {benchmark_results/expr3/usage_kafka_agg.csv};
+            \addplot [no markers, purple] table [x=row, y=ram] {benchmark_results/expr3/usage_nonotif_agg.csv};
+            \addplot [no markers, brown] table [x=row, y=ram] {benchmark_results/expr3/usage_noenoss_agg.csv};
+            \end{axis}
+        \end{tikzpicture}
+        \begin{tikzpicture}
+        \begin{customlegend}[legend columns=3,legend style={column sep=2ex},
+                legend entries={Beanstalkd ,
+                                Elasticsearch ,
+                                Kafka ,
+                                No notifications ,
+                                ENOSS disabled,
+                                }]
+                \addlegendimage{no markers, line width = 2px, blue}
+                \addlegendimage{no markers, line width = 2px, red}
+                \addlegendimage{no markers, line width = 2px, green}
+                \addlegendimage{no markers, line width = 2px, purple}
+                \addlegendimage{no markers, line width = 2px, brown}
+                \end{customlegend}
+        \end{tikzpicture}
+        \caption{Left: CPU usage by Proxy server worker during experiment 3. Right: RAM usage by Proxy server worker during experiment 3.} \label{fig:expr3-usage}
+    \end{figure}
+
+    \begin{center}
+    \begin{table}[!htb]
+        \begin{tabular}{|c|c|c|c|c|c|c|c|}
+        \hline
+        \multirow{2}{*}{Destination} & \multirow{2}{*}{\shortstack[c]{Requests\\ count}} & \multirow{2}{*}{\shortstack[c]{Requests\\ per sec}} &\multicolumn{5}{c|}{Latency(seconds)}\\
+        \cline{4-8}
+        & & & min & max & std dev & 95\%-idle & avg \\
+        \hline
+        ENOSS disabled & 223 618 & 124 & 0.004 & 6.239 & 0.044 & 0.097 & 0.039\\
+        \hline
+        No notifications & 204 998 & 113 & 0.004 & 3.682 & 0.042 & 0.105 & 0.043 \\
+        \hline
+        Beanstalkd & 204 894 & 113 & 0.004 & 3.866 & 0.046 & 0.102 & 0.042 \\
+        \hline
+        Apache Kafka & 193 471 & 107 & 0.004 & 5.104 & 0.047 & 0.104 & 0.045 \\
+        \hline
+        Elasticsearch(https) & 172 672 & 95 & 0.009 & 1.924 & 0.049 & 0.104 & 0.050 \\
+        \hline
+        \end{tabular}
+        \caption{\label{tab:expr3}Benchmark results for experiment 3.}
+    \end{table}
+    \end{center}
+
+    Experiments results tracking average request count per second, and latency are combined and displayed in figures \ref{fig:expr-combined-reqs} and \ref{fig:expr-combined-latency}. From provided results can be concluded that:
+    \begin{itemize}
+        \item Beanstalkd has best performace, while Elasticsearch is slowest.
+        \item ENOSS does not have big impact of latency for users that do not have enabled notifications.
+        \item Making additional request to Swift in order to retrieve needed information increases latency (in this experiments by 12-16 ms).
+        \item Even with publishing every event that occurs in Swift,
+        \item Creating notification for each ovent in Swift resulted in only 10-15 \% performance decrease for Beanstalk and Kafka queue.
+    \end{itemize}
+
+    \begin{figure}[!htb]
+        \begin{tikzpicture}
+            \begin{axis}[
+                    ybar,
+                    bar width=.5cm,
+                    width=1\textwidth,
+                    height=.5\textwidth,
+                    legend style={at={(0.5,1)},
+                        anchor=north,legend columns=-1},
+                    symbolic x coords={expr0, experiment1, experiment2, experiment3, expr4},
+                    xtick=data,
+                    nodes near coords,
+                    nodes near coords align={vertical},
+                    ymax=450,
+                    ymin=0,
+                    xmin=expr0,
+                    xmax=expr4,
+                    ylabel={Requests count},
+                ]
+                \addplot table[x=expr,y=beanstalkd]{benchmark_results/experiments_reqs_per_sec.txt};
+                \addplot table[x=expr,y=elasticsearch]{benchmark_results/experiments_reqs_per_sec.txt};
+                \addplot table[x=expr,y=kafka]{benchmark_results/experiments_reqs_per_sec.txt};
+                \addplot table[x=expr,y=no_notif]{benchmark_results/experiments_reqs_per_sec.txt};
+                \addplot table[x=expr,y=no_enoss]{benchmark_results/experiments_reqs_per_sec.txt};
+                \legend{Beanstalkd, Elasticsearch, Kafka, No notifications, ENOSS disabled}
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Combined experiments results tracking average number of requests per second. Bigger value is better.}
+        \label{fig:expr-combined-reqs}
+    \end{figure}
+
+    \begin{figure}[!htb]
+        \begin{tikzpicture}
+            \begin{axis}[
+                    ybar,
+                    bar width=.5cm,
+                    width=1\textwidth,
+                    height=.5\textwidth,
+                    legend style={at={(0.5,1)},
+                        anchor=north,legend columns=-1},
+                    symbolic x coords={expr0, experiment1, experiment2, experiment3, expr4},
+                    xtick=data,
+                    nodes near coords,
+                    nodes near coords align={vertical},
+                    ymax=60,
+                    xmin=expr0,
+                    xmax=expr4,
+                    ylabel={Latency(ms)},
+                ]
+                %\addplot table[x=interval,y=carT]{\mydata};
+                \addplot table[x=expr,y=beanstalkd]{benchmark_results/experiments_latency.txt};
+                \addplot table[x=expr,y=elasticsearch]{benchmark_results/experiments_latency.txt};
+                \addplot table[x=expr,y=kafka]{benchmark_results/experiments_latency.txt};
+                \addplot table[x=expr,y=no_notif]{benchmark_results/experiments_latency.txt};
+                \addplot table[x=expr,y=no_enoss]{benchmark_results/experiments_latency.txt};
+                \legend{Beanstalkd, Elasticsearch, Kafka, No notifications, ENOSS disabled}
+            \end{axis}
+        \end{tikzpicture}
+        \caption{Combined experiments results tracking latency. Smaller value is better.}
+        \label{fig:expr-combined-latency}
+    \end{figure}
 
 \chapter{Conclusion}
     \textcolor{gray}{\blindtext}
