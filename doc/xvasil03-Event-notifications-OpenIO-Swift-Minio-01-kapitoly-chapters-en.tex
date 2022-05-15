@@ -441,6 +441,15 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \end{lstlisting}
     \end{minipage}
 
+    \subsection{OIO-Swift}
+    One of the key components in OpenIO SDS system is OIO-Swift service, which acts like gateway. Main responsibility of this component is to handle Swift/S3 user requests. Implementation of OIO-Swift is based on OpenStack Swift Proxy server. OIO-Swift key features include:
+    \begin{itemize}
+        \item Operations on objects, containers and accounts.
+        \item Authentication support (using OpenStack Keystone).
+        \item Metadata support - enables usage of system metadata.
+        \item Swift Middleware support - allow running Swift middlewares within OpenIO SDS system.
+    \end{itemize}
+
 \chapter{OpenStack Swift}\label{chap:swift}
     This chapter introduces OpenStack object storage (code name Swift) and describes its key features. Furthermore, this chapter elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
 
@@ -1053,18 +1062,34 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \textbf{Creation of custom filters/payloads/destinations} can be interpreted as a creation of a new handler, and its process is simple and intuitive. A new handler must follow the specified rules(interface, name, and location). Once a new handler is implemented and imported into a proper module, a custom filter/payload/destination can be used in notification configuration using the handler selection described above.
 
     \subsection{OpenIO SDS compatibility}
-    \textcolor{gray}{\blindtext}
+    OpenIO SDS allows running Swift middleware using OIO-Swift gateway. Compared to the Swift Proxy server, OpenIO SDS offers a service called \textbf{oio-proxy}. oio-proxy is, in fact, a modified Swift Proxy server that allows communication with internal object storage services needed to handle user requests. The main difference between Swift and OpenIO Proxy server is that oio-proxy is implemented using \textbf{Python 2.7} while Swift proxy runs on \textbf{Python 3}.
 
-    \textcolor{gray}{\blindtext}
+    ENOSS middleware, notification configuration and validation, payload and filter handlers implementation are compatible with Python 2 and Python 3. For this purpose, implementation was based on Python library \textbf{\texttt{six}} that allows writing Py2/3 compatible codes.
+
+    \textbf{Problem} raises in implementation of destinations handlers, which utilizes third-party libraries, where compatibility with Python 2 is not guaranteed. Since support for Python 2 has officially ended, all new client libraries are mainly implemented only using Python 3.
+
+    \textbf{Kafka} Python library is compatible with both Python 2 and Python 3. Therefore Kafka destination can be used when ENOSS is running within OpenIO SDS.
+
+    \textbf{Beanstalkd} destination will use Python library \texttt{greenstalk} when ENOSS is running in Swift. Since \texttt{greenstalk} offers only support for Python 3, Beanstalkd needed to use other library for OpenIO SDS. For this purpose library \texttt{pybeanstalk} was used (offers only support for Python 2). Therefore, ENOSS needs to use two different libraries in order to publish notifications to beanstalkd, from Swift and OpenIO SDS.
+
+    \textbf{Elasticsearch} destination is compatible with Elasticsearch release version 8.2. However, this Elasticsearch release offers only Python 3 client library and is incompatible with lower versions of the Elasticsearch Python library. Therefore, when ENOSS runs in OpenIO, ENOSS cannot send notifications to Elasticsearch.
 
 \section{MinIO proxy}
-    \textcolor{gray}{\blindtext}
+    Since publishing notifications directly from MinIO to Beanstalkd queue is not possible due to possible incompatibility in newer versions of MinIO, a proxy program is needed.
 
-    \textcolor{gray}{\blindtext}
+    The main idea of proposed soultion is that MinIO will publish notification to supported destination, in this case MQTT queue, proxy program will read notification from MQTT and send it to Beanstalkd queue.
 
-    \textcolor{gray}{\blindtext}
+    Proxy program was written in Python3. For communication with MQTT program uses Eclipse Paho library, and for communication with Beanstalkd program utilizes Greenstalk library.
 
-    \textcolor{gray}{\blindtext}
+    The program expects one argument - path to configuration file in INI format. Configuration file must contain two sections:
+    \begin{itemize}
+        \item \textbf{beanstalkd} - information needed to connect to beanstalkd queue (address, port and tube name).
+        \item \textbf{mqtt} - information needed to connect to MQTT (broker, port, username, password, topic)
+    \end{itemize}
+
+    The program will read configuration from input file and then create connections to Beanstalkd and MQTT. MQTT API allows definitaion of \texttt{on\_message()} callback function, which will be called every time when new message is read from MQTT. This function is defined to read incoming message payload from MQTT and forwards it to Beanstalkd queue.
+
+    Lastly, using function \texttt{loop\_forever()}, program will be run in infite loop, while reading messages from MQTT and forwarding to Beanstalkd queue.
 
 
 \chapter{Testing, experiments and possible applications}
