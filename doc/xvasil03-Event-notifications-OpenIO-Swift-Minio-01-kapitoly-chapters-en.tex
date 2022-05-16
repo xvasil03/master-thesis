@@ -83,10 +83,7 @@ My interest in this topic stems from its possible impact on the extensive amount
 This thesis aims to create a program/middleware which will publish event notifications to user-specified destinations. One of the supported destinations will be the Beanstalk queue, but the program can be easily configured to support other destinations (for example, Kafka) using a predefined interface. The proposed program will allow users to specify, using objects metadata (such as name prefix/suffix and object size) and type of event, which event notification should be published. The program will be able to run within OpenStack Swift and OpenIO SDS. This thesis will strive to find such a solution that could be officially accepted as part of OpenStack Swift and OpenIO SDS.
 
 %structure of thesis
-This work consists of six chapters. Chapter \ref{chap:introduction} introduces the motivation, objectives, and proposed solutions of this work. Chapter \ref{chap:background} briefly describes technologies and general areas that this work relates to. Chapter \ref{chap:openiosds} covers OpenIO SDS, describes its data organization and key services providing events. Chapter \ref{chap:swift} introduces OpenStack object storage Swift, its data model, server processes and describes middlewares within OpenStack Swift. Chapter \ref{chap:minio} briefly covers MinIO storage and the way it publishes event notifications. Chapter \ref{chap:solution} describes the current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO, and proposes a solution for publishing event notifications in OpenIO SDS and OpenStack, and a solution for publishing event notifications from MinIO to Beanstalk queue.
-
-Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with the first point of the assingment, while chapter \ref{chap:solution} deals with the second point of assigment.
-
+This work consists of six chapters. Chapter \ref{chap:introduction} introduces the motivation, objectives, and proposed solutions of this work. Chapter \ref{chap:background} briefly describes technologies and general areas that this work relates to. Chapter \ref{chap:object-storages} covers object storages used in this work. Chapter introduces OpenIO SDS, describes its data organization and key services providing events. Chapter \ref{chap:object-storages} introduces OpenStack object storage Swift, its data model, server processes and describes middlewares within OpenStack Swift. Lastly, chapter \ref{chap:object-storages} briefly covers MinIO storage and the way it publishes event notifications. Chapter \ref{chap:solution} describes the current state of event notifications in OpenIO SDS, OpenStack Swift and MinIO, and proposes a solution for publishing event notifications in OpenIO SDS and OpenStack Swift, and a solution for publishing event notifications from MinIO to Beanstalk queue. Chapter \ref{chap:implementation} describes process of implementation, process of validation notification configurations, supported filters, notification payloads, and destinations. Furthermore chapter \ref{chap:implementation}, explains compatibility issues between OpenIO SDS and Swift and explains implementation process of proxy program allowing publishing notifications from MinIO to beanstalkd. Chapter \ref{chap:testing} describes testing process, benchmarking and applied experiments. Last chapter \ref{chap:conclusion} describes the overview of the achieved results.
 
 
 \chapter{Background}\label{chap:background}
@@ -333,19 +330,19 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \caption{Subset of Amazon S3 Event Types \cite{eventS3EventNotificationDest}\label{tab:eventTypesS3}}
     \end{table}
 
-
-\chapter{OpenIO SDS}\label{chap:openiosds}
-    This chapter introduces OpenIO Software-defined storage, its key features, its data organization along with the underlying technologies. Furthermore, this chapter introduces Grid For Apps framework (\ref{sec:oioGridForApps}) and event publishing in OpenIO (\ref{sec:oioEvent-Agent}).
+\chapter{Object storages}\label{chap:object-storages}
+    \section{OpenIO SDS}
+    This section introduces OpenIO Software-defined storage, its key features, its data organization along with the underlying technologies. Furthermore, this section introduces Grid For Apps framework (\ref{sec:oioGridForApps}) and event publishing in OpenIO (\ref{sec:oioEvent-Agent}).
 
     OpenIO Software-defined storage is open source object storage that is perfectly capable of traditional use cases (such as archiving, big data, cloud). However, at the same time, combined with Grid for Apps (\ref{sec:oioGridForApps}), it opens the door for users to create an application that needs much more sophisticated back-end operations. These applications include industrial IoT, machine learning and artificial intelligence, as well as any other applications whose workflow can benefit from automated jobs or tasks\cite{oioNextGen}. In addition, OpenIO SDS is event-driven storage with the ability to intercept events seamlessly and transparently to the rest of the stack.
 
-    \section{Key characteristics}
-    \subsection*{Hardware agnostic}
+    \subsection{Key characteristics}
+    \paragraph{Hardware agnostic}
     OpenIO SDS is fully software-defined storage capable of running on x86 or ARM hardware with minimal requirements. Cluster nodes can be different from each other, allowing different generations, types, and capacities to be combined without affecting a performance or efficiency\cite{oioKeyChars}.
     OpenIO has built-in support for heterogeneous hardware allowing every node to be used at its maximum performance.
-    \subsection*{No SPOF architecture}
+    \paragraph{No SPOF architecture}
     Every single service used to serve data is redundant from object chunks stored in a disc to the directory level, every information is duplicated. As a result, there is no single point of failure (SPOF) in the cluster and a node can be shut down without affecting overall availability or integrity\cite{oioCoreSolution}.
-    \subsection*{Cluster organization}
+    \paragraph{Cluster organization}
     Instead of a traditional cluster ring-like layout, OpenIO SDS is based on a grid of nodes \ref{fig:oioArch}. It is flexible and resource-conscious. Compared to other object storage solutions, cluster organization is not based on static data allocation that usually use Chord peer-to-peer distributed hash table algorithm. Instead, OpenIO SDS uses distributed directory for organizing data and metadata hash tables, which allows the software to attain the same level of scalability but with better and more consistent performance\cite{oioKeyChars}.
 
     \begin{figure}[H]
@@ -356,15 +353,15 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \end{figure}
 
 
-    \subsection*{Tiering}
+    \paragraph{Tiering}
     With tiering, OpenIO SDS offers users to configure a pool containing a group of hardware that can then be used to store specific types of objects. For example, users can create a pool of high-performance hard disks (e.g. SSDs) and use the pool to store objects that require low latency.
     This feature is realized by a mechanism called \textbf{storage policies}. Multiple storage policies can be defined in one particular namespace. Storage policies can also be used for specifying how many replicas should be created for a specific dataset\cite{oioCoreSolution}.
 
-    \subsection*{ConsciousGrid}
+    \paragraph{ConsciousGrid}
     ConsciousGrid is an OpenIO technology that uses real-time metrics from the nodes(CPU, I/O, capacity) automatically discover and place data in the most appropriate place. It provides \textbf{load balancing} and computes a score for each node and then provides weighted random selection\cite{oioSdsServices}.
 
 
-    \section{Data organization}
+    \subsection{Data organization}
     Multi-tenancy is one of the core concepts in OpenIO SDS. Data objects are stored within following hierarchy: \texttt{Namespace/Account/Container/Object} \ref{fig:oioDataOrganization}. Multiple namespaces can be configured in each cluster, providing multi-region/zone logical layouts for applications and segregated workloads depending on a tenant or geo-distribution need\cite{oioSdsConcepts}.
     There is no classic subdirectory tree. Instead, objects are stored in a flat structure in the container level. However, like many other object storages, there is a way to emulate a filesystem.
 
@@ -375,24 +372,24 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
         \label{fig:oioDataOrganization}
     \end{figure}
 
-    \subsection{Namespace}
+    \paragraph{Namespace}
     A coherent set of network services working together to run OpenIO's solutions. It hosts services and provides operations such as service configuration and monitoring.
 
-    \subsection{Account}
+    \paragraph{Account}
     An account usually represents a tenant and is the top level of data organization. Each account owns and manages a collection of containers. In addition, the account keeps track of namespace usage for each customer (i.e. bytes occupied by all of a customer's objects)\cite{oioCoreSolution}.
 
-    \subsection{Container}
+    \paragraph{Container}
     Container represents an object bucket. Each container belongs to one (and only one) account and is identified by a unique name within the account. The container carries additional information specifying how to manage its objects (e.g. how to secure them)\cite{oioCoreSolution}.
 
-    \subsection{Object}
+    \paragraph{Object}
     Object is the smallest data unit visible by a customer and represents a named BLOB with metadata. OpenIO SDS allows several objects to be stored in a container and are considered versions of the same object. Classic \texttt{API} operations (\texttt{PUT/GET/DELETE}) will be directed towards an object with the latest version. If the size of an object is larger than the specified limit at the namespace level, the object will be divided into chunks of data. This behavior allows capacity optimization as well as \textbf{distributed reads} that could be particularly useful for high-speed video streaming of large media\cite{oioCoreSolution}.
 
     %todo authentication and acl?
 
     %\section{Services} maybe include?
-    \section{Serverless computing}
+    \subsection{Serverless computing}
     OpenIO offers Serverless computing in object storage cluster nodes using the framework Grid For Apps.
-    \subsection{Grid For Apps}\label{sec:oioGridForApps}
+    \paragraph{Grid For Apps}\label{sec:oioGridForApps}
 
     Like Amazon AWS Lambda, OpenIO offers an \textbf{event-driven compute service} called Grid for Apps that works on top of OpenIO.
 
@@ -402,7 +399,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
 
     Grid for Apps in OpenIO is realized using service \texttt{event-agent} and \texttt{beanstalkd} queue.
 
-    \subsection{Event-agent}\label{sec:oioEvent-Agent}
+    \paragraph{Event-agent}\label{sec:oioEvent-Agent}
     Event-agent is an OpenIO service responsible for handling asynchronous jobs. It relies on beanstalkd backend to manage jobs. Event-agent key characteristics are\cite{oioSdsServices}:
     \begin{itemize}
         \item Stateless
@@ -450,14 +447,15 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
         \item Swift Middleware support - allow running Swift middlewares within OpenIO SDS system.
     \end{itemize}
 
-\chapter{OpenStack Swift}\label{chap:swift}
-    This chapter introduces OpenStack object storage (code name Swift) and describes its key features. Furthermore, this chapter elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
+\newpage
+\section{OpenStack Swift}
+    This section introduces OpenStack object storage (code name Swift) and describes its key features. Furthermore, this section elaborates OpenStack Swift architecture, introduces its main services and interfaces for communication with object storage.
 
     OpenStack Swift is open-source object storage developed by Rackspace, a company that, together with NASA, created the OpenStack project. After becoming an open-source project, Swift became the leading open-source object storage supported and developed by many famous IT companies, such as Red Hat, HP, Intel, IBM, and others.
 
     OpenStack Swift is a multi-tenant, scalable, and durable object storage capable of storing large amounts of unstructured data at low cost\cite{swiftOpenStackSwift}.
 
-    \section{Key characteristics}
+    \subsection{Key characteristics}
     Besides standard object storage characteristics (like scalability, durability, hardware agnostic, etc.), some of the keys OpenStack Swift characteristics:
 
     \paragraph{Multi-regional capability}
@@ -484,31 +482,31 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     \paragraph{Partial object retrival}
     Users can retrieve part of an object, for example, just a portion of a movie object file\cite{swiftImplementingCloudStorage}.
 
-    \section{Data model}
+    \subsection{Data model}
     OpenStack Swift allows users to store unstructured data objects with a canonical name containing \textit{account}, \textit{container} and \textit{object} in given order\cite{swiftOpenStackSwift}. The account names must be unique in the cluster, the container name must be unique in the account space, and the object names must be unique in the container. Other than that, if containers have the same name but belong to a different account, then they represent different storage locations. The same principle applies to objects. If objects have the same name but not the same container and account name, then these objects are different.
 
-    \subsection{Account}
+    \paragraph{Account}
     Accounts are root storage locations for data. Each account contains a list of containers within the account and metadata stored as key-value pairs. Accounts are stored in the account database. In OpenStack Swift, account is \textbf{storage account} (more like storage location) and \textbf{do not represent a user identity}\cite{swiftOpenStackSwift}.
 
-    \subsection{Container}
+    \paragraph{Container}
     Containers are user-defined storage locations in the account namespace where objects are stored. Containers are one level below accounts, therefore they are not unique in the cluster. Each container has a list of objects within the container and metadata stored as key-value pairs. Containers are stored in container database\cite{swiftOpenStackSwift}.
 
-    \subsection{Object}
+    \paragraph{Object}
     An object represents data stored in OpenStack Swift. Each object belongs to one (and only one) container. An object can have metadata stored as key-value pairs. Swift stores multiple copies of an object across the cluster to ensure durability and availability. Swift does this by assigning an object to \textit{partition}, which is mapped to multiple drives, and each driver will contain object copy\cite{swiftOpenStackSwift}.
 
-    \section{Server Processes}
+    \paragraph{Server Processes}
     The path towards data in OpenStack Swift consists of four main software services: \textbf{Proxy server}, \textbf{Account server}, \textbf{Continaer server} and \textbf{Object server}. Typically Account, Container and Object server are located on same machine creating \textbf{Storage node}.
 
-    \subsection{Proxy server}
+    \paragraph{Proxy server}
     The proxy server is the service responsible for communication with external clients. For each request, it will look up storage location(node) for an account, container, or object and route the request accordingly\cite{SwiftArchitecturalOverview}. The proxy server is responsible for handling many failures. For example, when a client sends a \texttt{PUT} request to OpenStack Swift, the proxy server will determine which nodes store the object. If some node fails, a proxy server will choose a hand-off node to write data. When a majority of nodes respond successfully, then the server proxy will return a success response code\cite{swiftOpenStackSwift}.
 
-    \subsection{Account server}
+    \paragraph{Account server}
     Account server stores information about containers in a particular account to SQL database. It is responsible for listing containers. It does not know where specific containers are, just what containers are in an account\cite{SwiftArchitecturalOverview}.
 
-    \subsection{Container server}
+    \paragraph{Container server}
     Container server is similar to account server, except it is responsible for listing objects and also does not know where specific objects are\cite{SwiftArchitecturalOverview}.
 
-    \subsection{Object server}
+    \paragraph{Object server}
     The Object Server is blob storage capable of storing, retrieving, and deleting objects. Objects are stored as binary files to a filesystem, where metadata are stored in the \textit{file's extended attributes (xattrs)}. This requires a filesystem with support of such attributes. Each object is stored using a hash value of object path (account/container/object) and timestamp. This allows storing multiple versions of an object. Since last write wins (due to timestamp), it is ensured that the correct object version is served\cite{SwiftArchitecturalOverview}.
 
     \begin{figure}[H]
@@ -518,7 +516,7 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
         \label{fig:swiftServers}
     \end{figure}
 
-    \section{Middlewares}
+    \subsection{Middlewares}
     Using Python WSGI middleware, users can add functionalities and behaviors to OpenStack Swift. Most middlewares are added to the Proxy server but can also be part of other servers (account server, container server, or object server).
 
     Middlewares are added by changing the configuration of servers. In example \ref{lst:swiftMiddleware}
@@ -545,10 +543,10 @@ Chapters \ref{chap:openiosds}, \ref{chap:swift}, and \ref{chap:minio} deal with 
     use = egg:swift#proxy
     \end{lstlisting}
 
-    \subsection{Interface}
+    \paragraph{Interface}
     OpenStack Swift servers are implemented using Python WSGI applications. Therefore only Python WSGI middlewares are accepted in OpenStack Swift.
 
-    In \ref{lst:swift-healthcheck} is example of simplified \texttt{healthcheck middleware}. The constructor takes two arguments, the first is a WSGI application, and the second is a configuration of middleware defined using Python Paste framework in \texttt{proxy-server.conf}. Middleware must have a call method containing the request environment information and response from previously called middleware. Middleware can perform some operations and call the next middleware in the pipeline or intercept a request. In the healtcheck example, if the path directs to \texttt{/healtcheck} , the middleware will return \texttt{HTTP Response}, and other middlewares in the pipeline will not be called.
+    In listing \ref{lst:swift-healthcheck} is example of simplified \texttt{healthcheck middleware}. The constructor takes two arguments, the first is a WSGI application, and the second is a configuration of middleware defined using Python Paste framework in \texttt{proxy-server.conf}. Middleware must have a call method containing the request environment information and response from previously called middleware. Middleware can perform some operations and call the next middleware in the pipeline or intercept a request. In the healtcheck example, if the path directs to \texttt{/healtcheck} , the middleware will return \texttt{HTTP Response}, and other middlewares in the pipeline will not be called.
 
     Method \texttt{filter\_factory} is used by the Python Paste framework to instantiate middleware.
 
@@ -575,7 +573,7 @@ def filter_factory(global_conf, **local_conf):
     return healthcheck_filter
 \end{lstlisting}
 
-    \subsection{Metadata}
+    \paragraph{Metadata}
     OpenStack Swift separates metadata into 3 categories based on their use:
     \begin{itemize}
         \item \textbf{\texttt{User Metadata}} - User metadata takes form \texttt{X-<type>-Meta-<key>: <value>}, where \texttt{<type>} represent resource type(i.e. account, container, object), and \texttt{<key>} and \texttt{<value>} are set by user. User metadata remain persistent until are updated using new value or removed using header \texttt{X-<type>-Meta-<key>} with no value or a header \texttt{X-Remove-<type>-Meta-<key>: <ignored-value>}.
@@ -586,10 +584,11 @@ def filter_factory(global_conf, **local_conf):
         \item \textbf{\texttt{Object Transient-Sysmeta}} - System metadata takes the form of \texttt{\newline X-Object-Transient-Sysmeta-<key>:<value>}. Transient-sysmeta has a similar behavior as system metadata and can be accessed only within Swift, and headers containing Transient-sysmeta are dropped. If middleware wants to store object metadata, it should use transient-sysmeta\cite{swiftMiddleware}.
     \end{itemize}
 
-\chapter{MinIO}\label{chap:minio}
-This chapter introduces MinIO object storage, describes its key features, most essential components, and event notifications in MinIO.
+\newpage
+\section{MinIO}\label{chap:minio}
+This section introduces MinIO object storage, describes its key features, most essential components, and event notifications in MinIO.
 
-\section{Introduction}
+    \subsection{Introduction}
     MinIO is software-defined object storage that provides high performance and scalability. MinIO was designed to be the standard in private/hybrid cloud object storage.
     It runs on industry-standard hardware and is 100\% open source\cite{minioObjectStorage}.
 
@@ -600,24 +599,24 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \paragraph{MinIO Console} - Browser-based GUI offering all commands from MinIO Client in a design that feels more intuitive for DevOps and IT admins.
     \paragraph{MinIO Kubernetes Operator} - plugin allowing easy deployment and operation of MinIO object storage on Kubernetes.
 
-\section{Key features}
+    \subsection{Key features}
     MinIO was designed to multiple benefits to object storage:
 
-    \subsection*{Ease of use}
+    \paragraph{Ease of use}
     MinIO can be installed simply by downloading a single binary file and executing it. The configuration setup has been kept to a bare minimum. Upgrading to a newer version is done with a single command, which is non-disruptive and does not provoke any downtime\cite{minioIntel}.
 
-    \subsection*{Encryption and WORM}
+    \paragraph{Encryption and WORM}
     MinIO provides per-object encryption using a unique object key protected by a master key managed key-management system (KMS).
 
     MinIO supports object locking by enforcing \textit{Write-Once-Read-Many(WORM)} immutability until the lock is expired or lifted. This mode prevents tempering with data once written\cite{minioHighPerformance}.
 
-    \subsection*{Metadata architecture}
+    \paragraph{Metadata architecture}
     MinIO does not provide separate storage for metadata. All operations are performed on object-level granularity. This approach isolates any failures and does not allow any spillover to larger system failures\cite{minioIntel}.
 
-    \subsection*{High availability}
+    \paragraph{High availability}
     MinIO design allows a server to lose up to half its drivers and a cluster to lose up to half its servers, and MinIO will still be able to successfully process requests and serve objects. This is achieved by erasure code that protects data with redundancy\cite{minioIntel}.
 
-    \section{Architecture}
+    \subsection{Architecture}
     MinIO is designed to be cloud-native object storage to be run in lightweight containers managed by external orchestration service such as Kubernetes. The entire server is ~40MB static binary and is highly effective in its use of CPU and memory resources. This allows co-hosting multiple numbers of tenants on shared hardware\cite{minioObjectStorage}.
 
     Usually, storages are built using multi-layer storage architecture, with a durable block layer at the bottom, a virtual file system in the middle layer, and multiple API gateways providing multiple protocols for emulating file, block, and object manipulation. The problem with this approach is that it has too many compromises\cite{minioIntel}.
@@ -638,7 +637,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \newpage
 
 
-    \section{Event notifications}
+    \subsection{Event notifications}
     MinIO supports event notification for an event occurring to objects. MinIO provides Amazon S3 like events structure and API for defining which events will be published. Administrators can define bucket-level notification rules using MinIO client or provided MinIO SDK API, around which S3 events and objects will MinIO publish event notifications. MinIO Lambda Notifications are built into the MinIO object storage service and only require access to the remote notification target \cite{minioMonitoring}.
 
     Supported event notification targets are AMQP, Redis, MySQL, LMQTT, NATS, Apache Kafka, Elasticsearch, PostgreSQL, Webhooks, and NSQ. Figure \ref{fig:minio-monitoring} provides an overview of events triggering and event publishing in MinIO.
@@ -678,7 +677,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Minio is open-source object storage but \textbf{does not provide custom middlewares}. However, since MinIO is implemented in the Go programming language, any custom changes (tweaks) in MinIO source code means that the whole project needs to be compiled, which can result in incompatibility in future versions of MinIO.
 
 \section{Middleware for OpenStack Swift and OpenIO SDS}
-    The goal is to create common application/middleware capable of running within OpenStack Swift and OpenIO SDS. The middleware will allow users to configure: which types of events will be published and a destination where given events will be published. Proposed middleware will be called \textbf{\texttt{EventNotification}}.
+    The goal is to create common application/middleware capable of running within OpenStack Swift and OpenIO SDS. The middleware will allow users to configure: which types of events will be published and a destination where given events will be published. Proposed middleware will be called \textbf{\texttt{ENOSS - Event Notifications in OpenStack Swift}}.
 
     \subsection{Location}
     For OpenIO SDS ideal place to run new middleware is inside the pipeline of event-agent. The main reason is that the event-agent has access to every event that occurs in OpenIO SDS and processes jobs in asynchronous mode, which means it will not impact the latency of client requests.
@@ -688,35 +687,36 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \subsection{Design}
     The proposed middleware heavily utilizes containers/buckets and accounts metadata. Information about which event should be published and where will be stored in metadata of upper level. For publishing events regarding objects, the configuration will be stored in a container/bucket metadata (for container/bucket events, the configuration will be stored in the account level).
 
-    Compared to Amazon S3 Notifications, EventNotification middleware will publish events regarding containers/buckets. Furthermore, EventNotification middleware will publish events regarding access to object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in a bucket.
+    Compared to Amazon S3 Notifications, ENOSS middleware will publish events regarding containers/buckets. Furthermore, ENOSS middleware will publish events regarding access to object storage (HTTP GET/HEAD), where Amazon S3 only offers notifications about changes (PUST/POST) in a bucket.
 
-    EventNotification middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. This option could be beneficial when there are many reads from object storage, and publishing those events could significantly impact object storage performance. Therefore such event types can be disabled for whole object storage.
+    ENOSS middleware can be configured so that specific even types will be forbidden for publishing in whole object storage. This option could be beneficial when there are many reads from object storage, and publishing those events could significantly impact object storage performance. Therefore such event types can be disabled for whole object storage.
 
-    Activity diagram of EventNotification middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configuration for publishing objects in a given container. Therefore the first step is to parse and validate such metadata. If the event notification configuration is not valid, then such configuration will be removed from metadata.
+    Activity diagram of ENOSS middleware in container level is shown in figure \ref{fig:middlewareActivity}. Container metadata contains event notification configuration for publishing objects in a given container. Therefore the first step is to parse and validate such metadata. If the event notification configuration is not valid, then such configuration will be removed from metadata.
 
-    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, EventNotification needs to read account metadata from storage. After reading and parsing account metadata, \texttt{EventNotification} middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
+    The next step is deciding if the event should be published. Since metadata about event publishing is stored in the upper level, ENOSS needs to read account metadata from storage. After reading and parsing account metadata, \texttt{ENOSS} middleware checks if the event satisfies a rule in configuration retrieved from account metadata. If yes, the event will be published to a specified destination in account metadata. A similar process is done for events involving objects, except objects do not carry information about event publishing, and configuration is stored in a proper container's metadata.
 
-    The figure \ref{fig:middlewareClassDiagram} shows simplified class diagram of EventNotification middleware. EventNotification defines \texttt{EventDestination} inteface , which simply sends created event notification to specified destination. This allow new types of event destination to be added easily in future. Class \texttt{EventNotification} is the core of middleware. Since access to metadata of upper level (container, account) does not have same interface for OpenStack Swift and OpenIO SDS, subclasses \texttt{Swift EventNotification} and \texttt{OpenIO EventNotification} were introduces to solve this problem.
+    The figure \ref{fig:middlewareClassDiagram} shows simplified class diagram of ENOSS middleware. ENOSS defines \texttt{EventDestination} inteface , which simply sends created event notification to specified destination. This allow new types of event destination to be added easily in future. Class \texttt{ENOSSMiddleware} is the core of middleware. Since OpenIO Proxy is compatible with OpenStack Proxy server, there is no need to divide ENOSS middleware into subclasses.
 
     \begin{figure}[H]
         \centering
         \includegraphics[width=0.9\textwidth]{obrazky-figures/middleware-activity-diagram.eps}
-        \caption{Activity diagram of EventNotification middleware.}
+        \caption{Activity diagram of ENOSS middleware.}
         \label{fig:middlewareActivity}
     \end{figure}
 
     \begin{figure}[H]
         \centering
-        \includegraphics[angle=90,height=0.96\textheight]{obrazky-figures/eventnotifications_class_diagram.eps}
-        \caption{Class diagram of EventNotification middleware.}
+        %\includegraphics[angle=90,height=0.96\textheight]{obrazky-figures/eventnotifications_class_diagram.eps}
+        \includegraphics[angle=90,height=1\textheight]{obrazky-figures/enoss_class_diagram.pdf}
+        \caption{Class diagram of ENOSS middleware.}
         \label{fig:middlewareClassDiagram}
     \end{figure}
 
 
     \subsection{Structure of published event}
-    EventNotification can publish event notification in Amazon S3 like structure and in structure following CloudEvents standard. Listing \ref{lst:eventStructureCE} and \ref{lst:eventStructureS3} describes event notification structure in JSON format.
+    ENOSS can publish event notification in Amazon S3 like structure and in structure following CloudEvents standard. Listing \ref{lst:eventStructureCE} and \ref{lst:eventStructureS3} describes event notification structure in JSON format.
 
-    \begin{lstlisting}[style=jsonStyle, caption=CloudEvents structure of event notification published by EventNotification middleware., label=lst:eventStructureCE]
+    \begin{lstlisting}[style=jsonStyle, caption=CloudEvents structure of event notification published by ENOSS middleware., label=lst:eventStructureCE]
     {
         "specversion" : "1.0",
         "type" : "event type",
@@ -741,7 +741,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \end{lstlisting}
 
     \begin{minipage}{\linewidth}
-    \begin{lstlisting}[style=jsonStyle, caption=Amazon S3 structure of event notification published by EventNotification middleware., label=lst:eventStructureS3]
+    \begin{lstlisting}[style=jsonStyle, caption=Amazon S3 structure of event notification published by ENOSS middleware., label=lst:eventStructureS3]
     {
        "Records":[
           {
@@ -834,12 +834,10 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Figure \ref{fig:minioProxy} shows a sequence diagram of the proposed proxy application for MQTT. The user configures MinIO event notifications using \textit{MinIO client} or \textit{MinIO SDKs}. Proxy application subscribes for MinIO messages in MQTT. Once event notification is sent from MinIO to MQTT, MQTT will send the event notification to subscribers, in this case Proxy application. Proxy application will receive a message containing an event notification from MinIO and forward it to Beanstalkd.
 
 
-\chapter{Implementation}
+\chapter{Implementation}\label{chap:implementation}
     This chapter discusses the implementation of a new OpenStack middleware - ENOSS. It summarises the implementation of the central middleware and describes new API for user communication. The chapter then describes notification configuration processing and it's validation process in ENOSS. Furthermore this chapter covers implementation of handlers for different types of payloads, filters and destinations with big emphasis on ENOSS "openness" to new custom handlers. Last part of this chapter discusses possibility of running ENOSS inside OpenIO SDS.
 
-    The implementation of OpenStack middleware \textbf{ENOSS} is publicly avaliable at Github and at official software repository for Python - Pypi.
-    \todo{Talk about installation, manual, examples}
-    \todo{Talk about structure of git repo, where are source codes, conf, etc}
+    The implementation of OpenStack middleware \textbf{ENOSS} is publicly avaliable at Github\footnote{ENOSS Github repo \url{https://github.com/xvasil03/enoss}} and at official software repository for Python - Pypi\footnote{ENOSS package published on Pypi \url{https://pypi.org/project/enoss}}.
 
 
 \section{ENOSS}
@@ -911,7 +909,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
     \textbf{Configuration} - during the runtime process, the middleware needs to validate new notification configurations, create different types of notification payloads, and send notifications to various destinations. In order to do so, the middleware needs information about available destinations and destination connection configurations. Furthermore, the middleware needs information about available payload types and the validation process of a new notification configuration. Lastly, since ENOSS allows Swift admins to publish notifications, the middleware also needs access to the admin's notification configuration.
 
-    Part of the needed information is stored in the Proxy server's configuration. Listing \ref{lst:middlewareConfig} shows example of middleware configuration, where:
+    Part of the needed information is stored in the Proxy server's configuration. Listing \ref{lst:middlewareConfig1} shows example of middleware configuration, where:
 
     \begin{itemize}
         \item \textbf{\texttt{destinations\_conf\_path}} - is a path to a configuration file containing all information needed for ENOSS to connect to various destinations (mandatory).
@@ -922,7 +920,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
     \lstset{
         caption=Example ENOSS middleware configuration stored in the Proxy server configuration (proxy-server.conf).,
-        label=lst:middlewareConfig
+        label=lst:middlewareConfig1
     }
     \begin{lstlisting}
     [filter:enoss]
@@ -1032,7 +1030,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
 
     \textbf{Available destinations} - ENOSS currently supports the following destinations:
     \begin{itemize}
-        \item \textbf{BeanstalkdDestination} - the destination is responsible for publishing notifications to Beanstalkd work queue. The destination is implemented using Python3 client library \texttt{Greenstalk}\footnote{Greenstalk - Beanstalkd Python Client \url{https://github.com/justinmayhew/greenstalk}.}. Beanstalkd server connection configuration is stored in the destination configuration file(which is specified in ENOSS section in proxy-server.conf) under section \texttt{\[beanstalkd\]}. From this section informations about server address, port and beanstalkd tube is read and used to initalize connection using Greenstalk library. Sending notification to Beanstalkd is relatively simple, \texttt{BeanstalkdDestination} receives notification in the form of dict, transforms it to string, and sends it to a queue using Greenstalk connection.
+        \item \textbf{BeanstalkdDestination} - the destination is responsible for publishing notifications to Beanstalkd work queue. The destination is implemented using Python3 client library \texttt{Greenstalk}\footnote{Greenstalk - Beanstalkd Python Client \url{https://github.com/justinmayhew/greenstalk}.}. Beanstalkd server connection configuration is stored in the destination configuration file(which is specified in ENOSS section in proxy-server.conf) under section \texttt{[beanstalkd]}. From this section informations about server address, port and beanstalkd tube is read and used to initalize connection using Greenstalk library. Sending notification to Beanstalkd is relatively simple, \texttt{BeanstalkdDestination} receives notification in the form of dict, transforms it to string, and sends it to a queue using Greenstalk connection.
 
         \item \textbf{KafkaDestination} - the destination is responsible for publishing notifications to Apacke Kafka distributed event streaming platform. The destination is implemented using Kafka Python client library \footnote{Kafka Python client \url{https://github.com/dpkp/kafka-python}}. Library provides high-level asynchronous message producer - \textbf{\texttt{KafkaProducer}}. Similarly to \texttt{BeanstalkdDestination}, \texttt{KafkaDestination} reads server configuration from the destination configuration file and reads a name of Kafka topic to which notifications will be published. Before sending a notification, \texttt{KafkaDestination} transforms notification from dict to bytes datatype and then sends it using KafkaProducer instance.
 
@@ -1092,7 +1090,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
     Lastly, using function \texttt{loop\_forever()}, program will be run in infite loop, while reading messages from MQTT and forwarding to Beanstalkd queue.
 
 
-\chapter{Testing, experiments and possible applications}
+\chapter{Testing, benchmark and possible applications}\label{chap:testing}
     This chapter describes the process of testing ENOSS middleware to determine whether ENOSS behavior matches its specification. This process is done using two types of tests: \textbf{unit} and \textbf{functional} tests. Furthermore, this chapter explains the process of benchmarking, analyzes ENOSS latency for each stage, provides information about benchmark scenarios, and compares performance between different types of destinations.
 
 \section{Testing}
@@ -1139,7 +1137,7 @@ This chapter introduces MinIO object storage, describes its key features, most e
         \item \textbf{ALC test for reading stored notification configuration} - simulates an unauthorized user trying to read stored a notification configuration without read rights. Expects HTTP Unauthorized response from Swift. The exact process is repeated for an authorized user, where the test expects that the user will receive notification configuration in Swift's response body.
         \item \textbf{ALC test for storing new notification configuration} - simulates an unauthorized user trying to store a new notification configuration without write rights. Expects HTTP Unauthorized response from Swift. Then the same process does for an authorized user, where the test expects that the notification configuration will be successfully stored.
     \end{enumerate}
-\section{Performance}
+\section{Performance analysis}
     As described in subsection \ref{sec:enoss-swift-section}, ENOSS can be divided into 6 logical stages. In order to understand how to measure ENOSS performance, firstly, an analysis of each logical stage is needed. The analysis mainly consists of determining whether ENOSS has all needed information to perform tasks in a stage. If not, where can ENOSS obtain such information, and how long would it approximately take for ENOSS to obtain or perform the given task.
 
     Stages analysis:
@@ -1161,12 +1159,12 @@ This chapter introduces MinIO object storage, describes its key features, most e
     \texttt{\[ENOSS\_latency = time(obtaining\_needed\_information) + time(sending\_notification)\]}
     where obtaining needed information in the best scenario can be entirely from cached data, or in the worst scenario can result in \textbf{maximum one additional request} to object storage.
 
-    \subsection{Benchmark}
+    \section{Experiments}
     Benchmarking was carried out on the FIT VUT university Kubernetes cluster. Each supported destination(Beanstalkd, Kafka, Elasticsearch) was created as a Kubernetes pod and service. OpenStack Swift was deployed using Nvidia Dockerfile for OpenStack Swift AIO(All in One), where Proxy, Account, Container, and Object servers are located on the same machine. OpenStack Swift pod was configured to have 16 VCPU (CPU Model: AMD EPYC 7282), 16GB RAM, and 50GB disk storage.
 
     Since the goal is to benchmark ENOSS middleware, which is located in the Proxy server, the Proxy server was configured to have only one worker in order to saturate the Proxy server CPU. Furthermore, in order to avoid bottlenecks on other servers, four workers were assigned(12 in total) to each of the other servers(Account, Container, and Object servers).
 
-    Benchmarking process is done using benchmark tool \textbf{\texttt{ssbench}}, designed by SwiftStack(Nvidia) for OpenStack Swift object storage system. \texttt{ssbench} has two main components - \textbf{ssbench-master} and \textbf{ssbench-worker}.The master component is in charge of creating and distributing benchmark jobs while workers preforms received jobs. A Benchmark test is defined using a \textbf{scenario}(sometimes called a “CRUD scenario”), which is a JSON-formatted file. The scenario contains following information \cite{swiftSsbench}:
+    Benchmarking process is done using benchmark tool \textbf{\texttt{ssbench}}, designed by SwiftStack(Nvidia) for OpenStack Swift object storage system. \texttt{ssbench} has two main components - \textbf{ssbench-master} and \textbf{ssbench-worker}.The master component is in charge of creating and distributing benchmark jobs while workers preforms received jobs. A Benchmark test is defined using a \textbf{scenario}(sometimes called a “CRUD scenario”), which is a JSON-formatted file. The scenario contains following information \cite{swiftSsbench123}:
     \begin{itemize}
         \item \textbf{name} - scenario's name
         \item \textbf{sizes} - list of "object size" classes. Each object size class has a name, minimum and maximum size of objects in bytes.
@@ -1523,12 +1521,40 @@ This chapter introduces MinIO object storage, describes its key features, most e
         \caption{Combined experiments results tracking latency. Smaller value is better.}
         \label{fig:expr-combined-latency}
     \end{figure}
+    \section{Use cases and applications}
+    ENOSS has multiple use cases. Some of possible use case scenarios where ENOSS can be applied are:
 
-\chapter{Conclusion}
-    \textcolor{gray}{\blindtext}
-    \textcolor{gray}{\blindtext}
-    \textcolor{gray}{\blindtext}
-    \textcolor{gray}{\blindtext}
-    \textcolor{gray}{\blindtext}
+    \begin{itemize}
+        \item \textbf{Event monitoring and alerting} - ENOSS can be expanded to publish notifications to more sophisticated event monitoring services with alerting (like Prometheus).
+
+        \item \textbf{Anomaly detection} - since ENOSS is capable of publishing unsuccessful events, using filter \textbf{httpcodes} admin can set ENOSS to publish notifications about events involving internal errors (HTTP code 5xx) or any other unsuccessful HTTP codes.
+
+        \item \textbf{Data theft detection} - user has a designated container for sensitive data. The container owner can "tell" ENOSS which users should have access to the container, and if some unknown users, that are not in the list of users specified by the container's owner, somehow gain access to the container, then ENOSS will publish a notification about such event.
+
+        \item \textbf{Data theft prevention} - user configures ENOSS to publish unauthorized events, which can result in the detection of the possible attempt of data theft.
+
+        \item \textbf{Postprocessing} - user wants to search stored data using their metadata. The user configures ENOSS to publish events that store, modify and delete data in object storage. The destination of published events would be Elasticsearch or some other custom destination capable of full-text search.
+    \end{itemize}
+
+\chapter{Conclusion}\label{chap:conclusion}
+    This thesis aimed to provide a way for users to retrieve information about events occurring in parts of object storage that they own/have access to. The primary destination for such information was the Beanstalkd queue. This goal was achieved by creating OpenStack Swift middleware called ENOSS(Event Notifications in OpenStack Swift).
+
+    ENOSS allows users to specify which event types should be published. Furthermore, ENOSS offers users additional even filtering using filter rules such as prefix, suffix, size, returned HTTP status code, and users list. All these filters, including event type, can be combined, allowing users to specify events that need to be published more precisely.
+
+    ENOSS offers several destinations to which notifications can be published. From popular stream-processing platform Apache Kafka to lightweight and extremely fast Beanstalkd working queue. ENOSS also supports publishing notifications to Elasticsearch, with many applications (from simple logging to more complex usage like indexing metadata).
+
+    Another ENOSS feature is the support of different payload types. Since ENOSS supports multiple destinations and has multiple applications, notification payloads may differ based on ENOSS usage.
+
+    One of the key advantages and ENOSS features is support for custom destinations, payloads, and filters.
+    In addition, ENOSS offers effortless creation and integration of new destinations, payloads, and filters using predefined interfaces and rules.
+
+    ENOSS configuration and notification payload are compatible with AWS S3 Event Notification. This key feature will allow future users to easily manipulate ENOSS since S3 Notifications are well documented and widely used. Additionally, OpenStack Swift and OpenIO SDS will be more competitive in the market since notifications were not supported in these object storages until now. S3 compatibility will also allow more accessible transition users from AWS S3 to OpenStack Swift or OpenIO SDS.
+
+    Benchmarking showed that even during stress tests when all events were published, sending notifications had a pretty minor impact on object storage performance. In the worst-case scenario, ENOSS needs to make an additional request to object storage to decide if an event should be published or to create a notification payload. From the experiment results simulating everyday daily use of object storage, it was concluded that publishing notifications had a pretty minor impact on latency - between 3ms (for Beanstalkd queue) and 11ms for Elasticsearch.
+
+    The work of the thesis was presented at the student conference of innovation, technology, and science Excel@FIT2022 under the name "ENOSS - Event Notifications in OpenStack Swift". The work received an award by the expert commission for the beneficial extension of the platform OpenStack.
+
+    Possible future work and ENOSS improvements include creating support for new destinations(MQTT, Redis, NSQ), payloads, and filters. One of the current ENOSS limitations is that some supported destinations can publish notifications to a single server address. Support for secondary destination servers would be beneficial.
+
 
 %=========================================================================

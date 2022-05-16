@@ -73,6 +73,7 @@
 
 \usepackage{multirow}
 \usepackage{pgfplots}
+\usepackage{dirtree}
 
 % =======================================================================
 % balíček "hyperref" vytváří klikací odkazy v pdf, pokud tedy použijeme pdflatex
@@ -149,7 +150,7 @@
 
     Cílem této práce je vytvořit software, který je schopen monitorovat a publikovat notifikace o události z Openstack Swift i z OpenIO Software-Defined Storage (SDS) do fronty Beanstalk. Tato práce také navrhuje řešení pro publikování notifikaci o událostech z MinIO do fronty Beanstalk.
 
-    K dosažení tohoto cíle je navržen nový middleware, který lze spouštět uvnitř pipeline proxy serveru v OpenStack Swift a jako (filtr) součást asynchronní služby Event-Agent uvnitř OpenIO SDS. %Pro monitorování událostí uvnitř MinIO navrhovaným řešením je adaptér, který bude sbírat notifikace z cílů upozornění podporovaných MinIO (například Webhooks) a přeposílat je do fronty Beanstalk, protože MinIO neumožňuje vlastní middleware.
+    K dosažení tohoto cíle je navržen nový middleware, který lze spouštět uvnitř pipeline proxy serveru v OpenStack Swift a uvnitř pipeline OIO-Swift serveru v OpenIO SDS. %Pro monitorování událostí uvnitř MinIO navrhovaným řešením je adaptér, který bude sbírat notifikace z cílů upozornění podporovaných MinIO (například Webhooks) a přeposílat je do fronty Beanstalk, protože MinIO neumožňuje vlastní middleware.
 
     Navržený middleware umožňuje uživatelům určit, zda mají zájem o publikování notifikaci o události pro konkrétní objekty/kontejnery pomocí metadat. Uživatel může specifikovat sadu pravidel zahrnující vlastnosti objektu, jako je název (prefix, přípona, podřetězec) a velikost, a budou publikovány pouze události splňující tato pravidla.
 
@@ -160,10 +161,10 @@
 
     The goal of this thesis is to create software that can monitor and publish event notifications from Openstack Swift and OpenIO Software-Defined Storage (SDS) to a Beanstalk queue. In addition, this thesis also proposes a solution for publishing event notifications from MinIO to a Beanstalk queue.
 
-    In order to accomplish this goal, new middleware is proposed that can be run inside a pipeline of Proxy Server in OpenStack Swift and as (filter) part of asynchronous service Event-Agent inside OpenIO SDS.
+    In order to accomplish this goal, new middleware is proposed that can be run inside a pipeline of Proxy Server in OpenStack Swift and inside pipeline of OIO-Swift inside OpenIO SDS.
     %For event monitoring inside MinIO proposed solution is an adapter that will collect notifications from MinIO supported notification targets (for example, Webhooks) and forward them to Beanstalk queue since MinIO does not allow custom middlewares.
 
-    Proposed middleware allows users to specify if they are interested in publishing event notifications for specific objects/containers using metadata. For example, users can specify a set of rules involving object properties, such as name (prefix, suffix, substring) and size, and only events satisfying those rules will be published.
+    Proposed middleware allows users to specify if they are interested in publishing event notifications for specific objects/containers using metadata. For example, users can specify a set of rules involving object properties, such as name (prefix, suffix) and size, and only events satisfying those rules will be published.
 
     The contribution of this thesis is unique software capable of event monitoring from both OpenIO SDS and Openstack Swift.
   }, % abstrakt v anglickém jazyce / abstract in english
@@ -184,7 +185,26 @@
   %acknowledgment={Here it is possible to express thanks to the supervisor and to the people which provided professional help
 %(external submitter, consultant, etc.).},
   % Rozšířený abstrakt (cca 3 normostrany) - lze definovat zde nebo níže / Extended abstract (approximately 3 standard pages) - can be defined here or below
-  %extendedabstract={Do tohoto odstavce bude zapsán rozšířený výtah (abstrakt) práce v českém (slovenském) jazyce.},
+  extendedabstract={
+  Současný stav je že uživatelé v OpenStack Swift nemají možnost získat informace když se provede určitá událost v častí objektovém úložišti které vlastni, nebo ke kterým máji přístupová práva. Například, OpenStack Swift neumožňuje odeslat notifikaci uživateli když dojde k smazání, nahrávání nebo čtení objektu.
+
+  Výsledkem teto práce je program pojmenovaný jako ENOSS - Event Notifications in OpenStack. ENOSS je implementován ve tvaru Python WSGI middleware a je zaražen do popelíne výchozí brány(gateway) objektového úložišta Swift a OpenIO SDS. Toto umístění umožňuje ENOSS programu přístup ke všem vstupním (uživatelské žádostí) a výstupním (odpovědí objektových úložišť) informaci.
+
+  Program umožňuje každém uživateli specifikovat o které události má zájem, tj které události se máji publikovat. Middleware silně využívá metadata vyšších vrstev (container a account). Konfigurace definující které události se máji publikovat se ukládá do systémových metadata, která jsou přístupna jen v interních procesech objektového úložišta. ENOSS rozšiřuje Swift API o koncový body pro vkládání nových konfiguraci a čtení uložených.
+
+  Uživatel může specifikovat typ události (čtení, aktualizace, zápis, mazání) a/nebo může definovat sadu filtrovacích pravidel která musí byt splněna aby událost byla publikována. Momentálně ENOSS podporuje filtrovací pravidla na prefix, sufix, maximální velikost, minimální velikost, typ internetového media, uživatelé a HTTP kód odpovědí objektového úložišta. ENOSS umožňuje publikaci notifikaci do následujících cílů: Beanstalkd fronta, Apache Kafka a Elasticsearch. Uživatelům je umožněno vybrat do kterého cíle se notifikace má odeslat.
+
+  Klíčova vlastnost ENOSS programu je podpora vlastních cílů, filtrovacích pravidel a obsahu notifikace. ENOSS specifikuje rozhraní a pravidla, která pokud se dodržuji vedou ke snadné integraci nové vlastni třídí s ENOSS systémem.
+
+  Další klíčová vlastnost je kompatibilita s Amazon S3 Event Notifications. Specifikování událostech které se májí publikovat je realizováno pomoci konfigurace která je kompatibilní s S3. Zároveň, výchozí struktura a obsah notifikace je taky kompatibilní s AWS S3.
+
+  Výchozí nastaveni ENOSS programu publikuje jenom úspěšně ukončené událostí. Oproti AWS S3, ENOSS lze konfigurovat aby publikovat události které nebyly úspěšně ukončené (např. neoprávněný přístup, interní chyba).
+
+Z analýzy chování ENOSS programu lze vyvést že pří zjištění konfiguraci notifikaci, uložených ve vyšších vrstev v architektuře, ENOSS má všechna potřebná data v cache pamětí. To znamená ze ENOSS nemá dopad na latence žádostí uživatelů který nemají nastavené notifikace. Při vytvoření obsahu notifikace a provedeni filtru ENOSS nemusí mít všechny nutné informace dostupné, a musí přečíst data z objektového úložišti, což zvyšuje latence. Ovšem získaná data z objektového úložišti jsou vložena do cache pamětí, a diky tomu lze dojit k maximálně jednom dodatečném čtení dat z objektového úložišti pří publikování události.
+
+Výsledný program má velké množství použití. ENOSS umožňuje detekci anomálii (vyfiltrovat události které mají návratový kód 5xx), odcizeni dat (notifikace když došlo k přístupu dat uživatelem který by nemel mít právo přístupu), prevence odcizeni dat (notifikace filtrující událostí s návratovým kódem 401) a postprocessing (např odeslání metadat do Elasticsearch a následné vyhledavání objektu pomoci metadata).
+
+  },
   %extabstract.odd={true}, % Začít rozšířený abstrakt na liché stránce? / Should extended abstract start on the odd page?
   %faculty={FIT}, % FIT/FEKT/FSI/FA/FCH/FP/FAST/FAVU/USI/DEF
   faculty.cs={Fakulta informačních technologií}, % Fakulta v češtině - pro využití této položky výše zvolte fakultu DEF / Faculty in Czech - for use of this entry select DEF above
