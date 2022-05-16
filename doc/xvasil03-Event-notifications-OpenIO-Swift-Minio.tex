@@ -161,7 +161,7 @@
 
     The goal of this thesis is to create software that can monitor and publish event notifications from Openstack Swift and OpenIO Software-Defined Storage (SDS) to a Beanstalk queue. In addition, this thesis also proposes a solution for publishing event notifications from MinIO to a Beanstalk queue.
 
-    In order to accomplish this goal, new middleware is proposed that can be run inside a pipeline of Proxy Server in OpenStack Swift and inside pipeline of OIO-Swift inside OpenIO SDS.
+    In order to accomplish this goal, new middleware is proposed that can be run inside a pipeline of Proxy Server in OpenStack Swift and inside the pipeline of OIO-Swift inside OpenIO SDS.
     %For event monitoring inside MinIO proposed solution is an adapter that will collect notifications from MinIO supported notification targets (for example, Webhooks) and forward them to Beanstalk queue since MinIO does not allow custom middlewares.
 
     Proposed middleware allows users to specify if they are interested in publishing event notifications for specific objects/containers using metadata. For example, users can specify a set of rules involving object properties, such as name (prefix, suffix) and size, and only events satisfying those rules will be published.

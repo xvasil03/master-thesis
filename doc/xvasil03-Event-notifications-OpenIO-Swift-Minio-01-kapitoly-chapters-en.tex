@@ -1290,9 +1290,9 @@ This section introduces MinIO object storage, describes its key features, most e
 
     \textbf{Experiment 2}: similarly to experiment 1, the ssbench scenario contains only tiny documents, and ENOSS is configured to create notifications for all events to one destination per event. This experiment targets situations when ENOSS does not have all needed information and needs to create one additional request to Swift.
 
-    Figure \ref{fig:expr2-usage} contains information about CPU and RAM usage by the Proxy server worker. Comparing CPU and RAM usage during this experiment with the previous experiment, a conclusion can be drawn that CPU and RAM usage remained the same. ENOSS did not need more RAM to gather needed information from object storage.
+    Figure \ref{fig:expr2-usage} contains information about CPU and RAM usage by the Proxy server worker. Comparing CPU and RAM usage during this experiment with the previous experiment, a conclusion can be drawn that CPU and RAM usage remained the same. Therefore, ENOSS did not need more RAM to gather needed information from object storage.
 
-    From table \ref{tab:expr2}, containing benchmark results for Experiment 2, a deduction can be made that making an additional request to object storage has an impact on latency. The worst performance occurred when ENOSS published notifications to Elasticsearch, while Beanstalkd outperformed Kafka queue, the same as the previous experiment.
+    From table \ref{tab:expr2}, containing benchmark results for Experiment 2, a deduction can be made that making an additional request to object storage impacts latency. The worst performance occurred when ENOSS published notifications to Elasticsearch, while Beanstalkd outperformed Kafka queue, the same as the previous experiment.
 
     \begin{figure}[!htb]
         \centering

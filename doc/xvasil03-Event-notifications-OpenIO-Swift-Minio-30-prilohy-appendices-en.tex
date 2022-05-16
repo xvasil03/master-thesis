@@ -20,12 +20,20 @@
 .4 test ---- ENOSS tests.
 .5 functional.
 .5 unit.
+.3 mqtt-to-beanstalkd ---- source codes for MinIO proxy from MQTT to Beanstalkd
 }
 
 \chapter{Repository and Usage Guide}
 ENOSS repository is publicly avaliable at the Github {\url{https://github.com/xvasil03/enoss}}.
 
 \textbf{Demo} - OpenStack Swift demo with enabled and configured ENOSS to publish notifications to Beanstalkd queue is located in \texttt{enoss/demo}. Demo can be runned using script \texttt{run\_docker\_demo.sh}, which will create and run docker image. Demo will at start run all unit and functional ENOSS tests. Messages sent to beanstalkd queue will be shown to stdout of created docker container (messages will be in docker logs).
+
+\textbf{Mqtt-to-Beanstalkd Demo}
+\begin{enumerate}
+    \item \begin{verbatim} cd mqtt-to-beanstalkd\end{verbatim}
+    \item \begin{verbatim} docker-compose build\end{verbatim}
+    \item \begin{verbatim} docker-compose run\end{verbatim}
+\end{enumerate}
 
 \textbf{Build} - output located in \texttt{enoss/dist}
 \begin{enumerate}
