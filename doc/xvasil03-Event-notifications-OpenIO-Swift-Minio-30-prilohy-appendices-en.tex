@@ -4,6 +4,8 @@
 \chapter{Contents of the included storage media}
 \dirtree{%
 .1 /.
+.2 thesis ---- thesis documentation.
+.2 excel-paper.pdf ---- Article written for EXCEL@FIT2022.
 .2 src ---- source codes.
 .3 enoss ---- ENOSS repository.
 .4 benchmark ---- benchmark results.
@@ -12,7 +14,9 @@
 .5 expr3 ---- benchmark resuls for experiment 3.
 .5 k8s ---- k8s sources used for benchmarking.
 .4 demo ---- OpenStack Swift demo with enabled ENOSS.
+.4 demo\_openio ---- OpenIO SDS demo with enabled ENOSS.
 .4 enoss ---- ENOSS source codes.
+.5 enoss.py ---- ENOSS middleware.
 .5 destinations ---- destination handlers.
 .5 payloads ---- payload handlers.
 .5 filter\_rules ---- filter rule handlers.
@@ -20,13 +24,15 @@
 .4 test ---- ENOSS tests.
 .5 functional.
 .5 unit.
-.3 mqtt-to-beanstalkd ---- source codes for MinIO proxy from MQTT to Beanstalkd
+.3 mqtt-to-beanstalkd ---- source codes for MinIO proxy from MQTT to Beanstalkd.
 }
 
 \chapter{Repository and Usage Guide}
 ENOSS repository is publicly avaliable at the Github {\url{https://github.com/xvasil03/enoss}}.
 
 \textbf{Demo} - OpenStack Swift demo with enabled and configured ENOSS to publish notifications to Beanstalkd queue is located in \texttt{enoss/demo}. Demo can be runned using script \texttt{run\_docker\_demo.sh}, which will create and run docker image. Demo will at start run all unit and functional ENOSS tests. Messages sent to beanstalkd queue will be shown to stdout of created docker container (messages will be in docker logs).
+
+\textbf{Demo OpenIO SDS} - check \texttt{src/enoss/demo\_openio/README.txt}
 
 \textbf{Mqtt-to-Beanstalkd Demo}
 \begin{enumerate}
@@ -38,20 +44,24 @@ ENOSS repository is publicly avaliable at the Github {\url{https://github.com/xv
 \textbf{Build} - output located in \texttt{enoss/dist}
 \begin{enumerate}
     \item \begin{verbatim} cd enoss\end{verbatim}
+    \item \begin{verbatim} pip3 install -U setuptools\end{verbatim}
+    \item \begin{verbatim} pip3 install wheel\end{verbatim}
     \item \begin{verbatim} python3 setup.py sdist bdsit_wheel\end{verbatim}
 \end{enumerate}
 
 \textbf{Instalation - OpenStack Swift (Python 2)}
 \begin{enumerate}
-    \item \begin{verbatim} pip install enoss/dist/*whl\end{verbatim}
-    \item \begin{verbatim} pip install -r enoss/requirements-py2.txt\end{verbatim}
+    \item \begin{verbatim} cd enoss \end{verbatim}
+    \item \begin{verbatim} pip install ./dist/*whl\end{verbatim}
+    \item \begin{verbatim} pip install -r ./requirements-py2.txt\end{verbatim}
     \item \begin{verbatim} store configurations files from enoss/etc (needed for ENOSS configuration)\end{verbatim}
 \end{enumerate}
 
 \textbf{Instalation - OpenStack Swift (Python 3)}
 \begin{enumerate}
+    \item \begin{verbatim} cd enoss \end{verbatim}
     \item \begin{verbatim} pip3 install enoss/\end{verbatim}
-    \item \begin{verbatim} pip3 install -r enoss/requirements.txt\end{verbatim}
+    \item \begin{verbatim} pip3 install -r ./requirements.txt\end{verbatim}
     \item \begin{verbatim} store configurations files from enoss/etc (needed for ENOSS configuration)\end{verbatim}
 \end{enumerate}
 
