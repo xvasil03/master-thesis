@@ -4,8 +4,8 @@
 \chapter{Contents of the included storage media}
 \dirtree{%
 .1 /.
-.2 thesis ---- thesis documentation.
-.2 excel-paper.pdf ---- Article written for EXCEL@FIT2022.
+.2 thesis ---- thesis documentation source codes.
+.2 xvasil03.pdf ---- Thesis document.
 .2 src ---- source codes.
 .3 enoss ---- ENOSS repository.
 .4 benchmark ---- benchmark results.
@@ -13,8 +13,7 @@
 .5 expr2 ---- benchmark resuls for experiment 2.
 .5 expr3 ---- benchmark resuls for experiment 3.
 .5 k8s ---- k8s sources used for benchmarking.
-.4 demo ---- OpenStack Swift demo with enabled ENOSS.
-.4 demo\_openio ---- OpenIO SDS demo with enabled ENOSS.
+.4 demo ---- OpenIO SDS and OpenStack Swift demo with enabled ENOSS.
 .4 enoss ---- ENOSS source codes.
 .5 enoss.py ---- ENOSS middleware.
 .5 destinations ---- destination handlers.
@@ -24,15 +23,21 @@
 .4 test ---- ENOSS tests.
 .5 functional.
 .5 unit.
+.4 examples ---- Several examples of notifications configurations.
 .3 mqtt-to-beanstalkd ---- source codes for MinIO proxy from MQTT to Beanstalkd.
 }
 
 \chapter{Repository and Usage Guide}
 ENOSS repository is publicly avaliable at the Github {\url{https://github.com/xvasil03/enoss}}.
 
-\textbf{Demo} - OpenStack Swift demo with enabled and configured ENOSS to publish notifications to Beanstalkd queue is located in \texttt{enoss/demo}. Demo can be runned using script \texttt{run\_docker\_demo.sh}, which will create and run docker image. Demo will at start run all unit and functional ENOSS tests. Messages sent to beanstalkd queue will be shown to stdout of created docker container (messages will be in docker logs).
-
-\textbf{Demo OpenIO SDS} - check \texttt{src/enoss/demo\_openio/README.txt}
+\textbf{ENOSS demo} is stored in \texttt{enoss/demo}. Demo contains following containers:
+\begin{itemize}
+    \item \textbf{Beanstalkd listener} - contains beanstalkd service, receives notifications from OpenIO SDS and Swift and prints then to stdout (docker logs).
+    \item \textbf{ENOSS Swift} - container with OpenStack Swift with enabled ENOSS. Can publish notifications to beanstalkd. After container init runs UNIT and FUNCTIONAL ENOSS tests.
+    \item \textbf{ENOSS OpenIO} - container with OPENIO SDS with enabled ENOSS. Can publish notifications to beanstalkd.
+    \item \textbf{Demo worker} - waits 2 minutes for other containers to initialize then runs demo scripts \texttt{enoss/demo/demo\_openio.sh} and \texttt{enoss/demo/demo\_swift.sh} Demo scripts will enable notifications on specific container, read stored configuration from object storage, and then create event which will trigger notification. Connect to this container and communicate with OpenStack Swift using hostname \texttt{swift-service} and with OpenIO SDS using hostname \texttt{openio-service}.
+\end{itemize}
+Run demo using \textbf{\texttt{docker-compose up}}.
 
 \textbf{Mqtt-to-Beanstalkd Demo}
 \begin{enumerate}
@@ -41,15 +46,15 @@ ENOSS repository is publicly avaliable at the Github {\url{https://github.com/xv
     \item \begin{verbatim} docker-compose run\end{verbatim}
 \end{enumerate}
 
-\textbf{Build} - output located in \texttt{enoss/dist}
+\textbf{ENOSS Build} - output located in \texttt{enoss/dist}
 \begin{enumerate}
     \item \begin{verbatim} cd enoss\end{verbatim}
     \item \begin{verbatim} pip3 install -U setuptools\end{verbatim}
     \item \begin{verbatim} pip3 install wheel\end{verbatim}
-    \item \begin{verbatim} python3 setup.py sdist bdsit_wheel\end{verbatim}
+    \item \begin{verbatim} python3 setup.py sdist bdist_wheel\end{verbatim}
 \end{enumerate}
 
-\textbf{Instalation - OpenStack Swift (Python 2)}
+\textbf{Instalation - OpenIO SDS(Python 2)} - requires pip2.
 \begin{enumerate}
     \item \begin{verbatim} cd enoss \end{verbatim}
     \item \begin{verbatim} pip install ./dist/*whl\end{verbatim}
